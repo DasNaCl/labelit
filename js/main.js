@@ -685,14 +685,15 @@ function updatePagination() {
   ul.html('');
   $("<li class=\"page-item" + (state.current_pic == 0 ? " disabled" : "") +
     "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(state.current_pic-1)\" aria-label=\"Previous\">" +
-    "<span aria-hidden=\"true\">&laquo;</span><span class=\"sr-only\">Previous</span>" +
+    "<span aria-hidden=\"true\">&laquo;</span><span class=\"sr-only\">Previous</span><br>&nbsp;" +
     "</a></li>").appendTo(ul);
 
-  var min = (state.current_pic > 10 ? state.current_pic - 10 : 0);
-  var max = (state.images.length - state.current_pic > 10 ? state.current_pic + 10 + Math.max(10 - state.current_pic, 0) : state.images.length);
+  var half = 5;
+  var min = (state.current_pic > half ? state.current_pic - half : 0);
+  var max = (state.images.length - state.current_pic > half ? state.current_pic + half + Math.max(half - state.current_pic, 0) : state.images.length);
 
-  if(state.images.length - state.current_pic < 10) {
-    min = Math.max(0, Math.min(min, min - (10 - (state.images.length - state.current_pic))));
+  if(state.images.length - state.current_pic < half) {
+    min = Math.max(0, Math.min(min, min - (half - (state.images.length - state.current_pic))));
   }
   for(var i = min; i < max; ++i) {
     var status = state.images[i].status;
@@ -701,13 +702,13 @@ function updatePagination() {
                                    : "<span class=\"fa-solid fa-eye\"></span>");
 
     $("<li class=\"page-item" + (state.current_pic == i ? " active" : "") +
-      "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic("
-      + i + ");\">" + text //(i + 1)
-      + "</a></li>").appendTo(ul);
+      "\"><span style=\"text-align:center;\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic("
+      + i + ");\">" + text + "<br>" + (i + 1)
+      + "</a></span></li>").appendTo(ul);
   }
   $("<li class=\"page-item" + (state.current_pic + 1 < state.images.length ? "" : " disabled") +
     "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(state.current_pic+1)\" aria-label=\"Next\">" +
-    "<span aria-hidden=\"true\">&raquo;</span><span class=\"sr-only\">Next</span>" +
+    "<span aria-hidden=\"true\">&raquo;</span><span class=\"sr-only\">Next</span><br>&nbsp;" +
     "</a></li>").appendTo(ul);
 }
 
