@@ -714,7 +714,7 @@ function updatePagination() {
   // update progressbar
   var num = []; num["seen"] = 0; num["review"] = 0; num["unseen"] = 0;
   var counts = [];
-  var curcounting = 'unseen';
+  var curcounting = state.images[0].status;
   var count = 0;
   for(var i = 0; i < state.images.length; ++i) {
     if(state.images[i].status == curcounting) {
@@ -725,6 +725,9 @@ function updatePagination() {
       curcounting = state.images[i].status;
       count = 0;
     }
+  }
+  if(count != 0) {
+    counts.push({ what: curcounting, val: count });
   }
   $('#progressdiv').html('');
   for(var i = 0; i < counts.length; ++i) {
