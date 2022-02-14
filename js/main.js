@@ -116,10 +116,10 @@ var LabeledRect = fabric.util.createClass(fabric.Rect, {
 
     ctx.fillStyle = this.stroke;
     ctx.font = `${this.fontSize}px Verdana`;
-    ctx.fillRect(-this.width/2, -this.height/2,
+    ctx.fillRect(-this.width/2, -this.height/2 - this.fontSize,
                  getTextWidth(this.label + ` (${this.conf})`, ctx.font), this.fontSize);
     ctx.fillStyle = isDark(this.stroke) ? 'white' : 'black';
-    ctx.fillText(this.label + ` (${this.conf})`, -this.width/2, -this.height/2 + this.fontSize);
+    ctx.fillText(this.label + ` (${this.conf})`, -this.width/2, -this.height/2);
   }
 });
 

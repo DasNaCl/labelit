@@ -8,4 +8,5 @@ To run it, do:
 ```sh
 python -m aiohttp.web -H localhost -P 8080 serve:init_func
 ```
+Then open your favorite webbrowser and open the website `localhost:8080`.
 
