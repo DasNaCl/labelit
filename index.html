@@ -1,0 +1,183 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 50px;
+                padding-bottom: 20px;
+            }
+        </style>
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+        <script defer src="js/vendor/fontawesome-all.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <nav class="navbar" role="navigation">
+      <div class="container">
+        <a class="navbar-brand" href="#">Label-It</a>
+      </div>
+    </nav>
+
+<!-- Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="helpModalLabel">Hotkeys</h5>
+      </div>
+      <div class="modal-body">
+        <p>Delete a <i>selected</i> box: [x] or [Backspace] (<i class="fa-solid fa-delete-left"></i>) or [Delete] key</p>
+        <p>Mark image as done (<i class="fa-solid fa-eye"></i>) and go to next one: [Space]</p>
+        <p>Go to previous/next image: Arrow Left (<i class="fa-solid fa-arrow-left"></i>) or Arrow Right (<i class="fa-solid fa-arrow-right"></i>)</p>
+        <p></p>
+        <p>Close this window: Click anywhere outside this window</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+        <div id="initial-menu">
+          <h1 id="instru-1">Select all files you want to label:</h1>
+          <div id="loadfiles"><input class="btn btn-primary btn-lg" type="file" onchange="readfiles(this.files)" multiple="" />&nbsp;&nbsp;<i id="filecheckmark" class="fa-solid fa-check fa-2xl" style="color:green;display:none;"></i></div>
+          </br>
+          <h1 id="instru-2">Select JSON file associated with the dataset:</h1>
+          <h3>(image file names must appear in the JSON)</h3>
+          <div id="JSONBut">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="cocoormega" id="megaradio" value="mega" onclick="jsonformatupdate()">
+              <label class="form-check-label" for="megaradio">Mega</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="cocoormega" id="cocoradio" value="coco" onclick="jsonformatupdate()">
+              <label class="form-check-label" for="cocoradio">COCO</label>
+            </div>
+            <div class="form-check form-check-inline form-switch">
+              <input class="form-check-input" type="checkbox" id="nojsoncheck" onclick="nojson()">
+              <label class="form-check-label" for="nojsoncheck">None</label>
+            </div>
+            <input disabled id="jsonbutton" class="btn btn-primary btn-lg" type="file" onchange="loadjson(this.files)" />&nbsp;&nbsp;<i id="jsoncheckmark" class="fa-solid fa-check fa-2xl" style="color:green;display:none;"></i>
+          </div>
+          </br>
+          <h1>Modify classes, if necessary.</h1>
+          <input style="width:50%;height:2.5em" type="text" id="classinput" placeholder="Dog" value="Steinbock;Reh;Murmeltier;Vogel;Hirsch" />
+          <span class="p-4 fs-3">Check:</span>
+          <div class="btn-group">
+            <button id="testdropdown" type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              Classes
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdown">
+              <a class="dropdown-item" href="#">Steinbock</a>
+              <a class="dropdown-item" href="#">Reh</a>
+              <a class="dropdown-item" href="#">Murmeltier</a>
+              <a class="dropdown-item" href="#">Vogel</a>
+              <a class="dropdown-item" href="#">Hirsch</a>
+            </ul>
+          </div>
+          <h1>Finally, hit</h1>
+          <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />
+        </div>
+
+        <div id="annot" style="display:none;">
+          <!-- Help button for modal-->
+          <button type="button" class="btn btn-primary" onclick="$('#helpModal').modal('show')"> 
+            <i class="fa-solid fa-question"></i>
+          </button>
+          <button class="btn btn-success" onclick="update_canvas()"><span class="fa-solid fa-rotate"></span></button>
+          <button class="btn btn-success" onclick="drawbox()"><i class="fa-solid fa-pen"></i></button>
+&nbsp;&nbsp;&nbsp;
+<!-- Sex -->
+            <div class="btn-group colors" data-toggle="buttons">
+              <label class="btn btn-info disabled">
+                <input id="sex-f" type="radio" name="sex-options" value="juvenile" autocomplete="off" onclick="updateBBOXInfo({sex:'female'})"><span class="fa-solid fa-venus"></span>
+              </label>
+              <label class="btn btn-secondary disabled">
+                <input id="sex-u" type="radio" name="sex-options" value="undefined" autocomplete="off" onclick="updateBBOXInfo({sex:'undefined'})" checked> <span class="fa-solid fa-venus-mars"></span>
+              </label>
+              <label class="btn btn-danger disabled">
+                <input id="sex-m" type="radio" name="sex-options" value="mature" autocomplete="off" onclick="updateBBOXInfo({sex:'male'})"> <span class="fa-solid fa-mars"></span>
+              </label>
+            </div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<!-- Age -->
+<div class="btn-group colors" data-toggle="buttons">
+  <label class="btn btn-info active disabled">
+    <input id="age-y" type="radio" name="age-options" value="juvenile" autocomplete="off" onclick="updateBBOXInfo({age:'juvenile'})" ><span class="fa-solid fa-child"></span>
+  </label>
+  <label class="btn btn-secondary disabled">
+    <input id="age-u" type="radio" name="age-options" value="undefined" autocomplete="off" onclick="updateBBOXInfo({age:'undefined'})" checked> <span class="fa-solid fa-question"></span>
+  </label>
+  <label class="btn btn-danger disabled">
+    <input id="age-m" type="radio" name="age-options" value="mature" autocomplete="off" onclick="updateBBOXInfo({age:'mature'})"> <span class="fa-solid fa-user-graduate"></span>
+  </label>
+</div>
+              <div class="btn-group">
+                <button id="dropdown" type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                  Class
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdown">
+                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Steinbock'})">Steinbock</a>
+                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Murmeltier'})">Murmeltier</a>
+                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Hirsch'})">Hirsch</a>
+                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Reh'})">Reh</a>
+                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Vogel'})">Vogel</a>
+                </ul>
+              </div>
+          <span class="p-6">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<!-- Image seen/Unseen -->
+<div class="btn-group colors">
+    <button class="btn btn-primary active" id="btnunseen" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="unseen" autocomplete="off" onclick="markImg('unseen')" checked ><span class="fa-solid fa-eye-slash"></span>
+    <button class="btn btn-danger" id="btnreview" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="review" autocomplete="off" onclick="markImg('review')"> <span class="fa-solid fa-magnifying-glass"></span>
+    <button class="btn btn-success" id="btnseen" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="seen" autocomplete="off" onclick="markImg('seen')"><span class="fa-solid fa-eye"></span>
+</div>
+          <span class="p-6">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <div class="btn-group colors">
+            <input type="number" class="form-control w-50" id="filternumber" aria-describedby="numberHelp" min="0" max="1.0" value="0.6" step="0.05" oninput="applyFilter()">
+            <div class="btn-group-toggle" data-toggle="buttons">
+              <label class="btn btn-info" ><input id="filtercheckbox" type="checkbox" autocomplete="off" onclick="applyFilter()"><i class="fa-solid fa-filter"></i></label>
+            </div>
+          </div>
+          <button class="btn btn-info" onclick="exportData()"><i class="fa-solid fa-file-export"></i></button>
+
+          <div style="margin:0;">
+            <div id="canvasdiv" style="float:left;min-width:80%;overflow:hidden;">
+            <canvas id="canvas"></canvas>
+<nav aria-label="Image navigation">
+  <ul id="controlul" class="pagination justify-content-center">
+  </ul>
+</nav>
+            </div>
+            <div id="csvspace" style="float:right;min-width:0%;padding-left:1em;overflow:hidden;"></div>
+          </div>
+          <div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </div> <!-- /container -->        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
+
+        <!--<script src="js/vendor/popper.min.js"></script>-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+        <script src="js/vendor/fabric.min.js"></script>
+
+        <script src="js/main.js"></script>
+    </body>
+</html>
