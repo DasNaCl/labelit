@@ -710,6 +710,25 @@ function updatePagination() {
     "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(state.current_pic+1)\" aria-label=\"Next\">" +
     "<span aria-hidden=\"true\">&raquo;</span><span class=\"sr-only\">Next</span><br>&nbsp;" +
     "</a></li>").appendTo(ul);
+
+  // update progressbar
+  var num_seen = 0;
+  var num_review = 0;
+  var num_unseen = 0;
+  for(var i = 0; i < state.images.length; ++i) {
+    if(state.images[i].status == 'seen') {
+      ++num_seen;
+    }
+    else if(state.images[i].status == 'review') {
+      ++num_review;
+    }
+    else {
+      ++num_unseen;
+    }
+  }
+  var progress = (100.0 * num_seen) / state.images.length;
+  $('#progressbar').css('width', progress + '%')
+                   .attr('aria-valuenow', progress + '%');
 }
 
 function startAnnotation() {
