@@ -669,6 +669,7 @@ function exportData() {
         file_name: state.images[jdx].file.name,
         height: oImg.height,
         width: oImg.width,
+        status: state.images[jdx].status,
       });
       state.images[jdx].width = oImg.width;
       state.images[jdx].height = oImg.height;
@@ -786,17 +787,24 @@ function mayEnableAnnotButton() {
     $("#classinput").val(catstring);
     $("#classinput").trigger("input");
     var imgid2img = [];
+    var img2imgid = [];
     for(var i = 0; i < state.spec.images.length; ++i) {
       imgid2img[state.spec.images[i].id] = state.spec.images[i].file_name;
+      img2imgid[state.spec.images[i].file_name] = state.spec.images[i].id;
+    }
+    for(var j = 0; j < state.images.length; ++j) {
+      if(state.spec.images[img2imgid[state.images[j].file.name]].status) {
+        state.images[j].status = state.spec.images[img2imgid[state.images[j].file.name]].status;
+      }
     }
     for(var j = 0; j < state.images.length; ++j) {
       var img = state.images[j].file;
       var bboxes = [];
       for(var i = 0; i < state.spec.annotations.length; ++i) {
         var annot = state.spec.annotations[i];
-        var imgw = state.spec.images[annot.image_id].width;
-        var imgh = state.spec.images[annot.image_id].height;
         if(imgid2img[annot.image_id].includes(img.name)) {
+          var imgw = state.spec.images[annot.image_id].width;
+          var imgh = state.spec.images[annot.image_id].height;
           bboxes.push({
             left: annot.bbox[0] / imgw,
             top: annot.bbox[1] / imgh,
