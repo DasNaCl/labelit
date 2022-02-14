@@ -712,23 +712,30 @@ function updatePagination() {
     "</a></li>").appendTo(ul);
 
   // update progressbar
-  var num_seen = 0;
-  var num_review = 0;
-  var num_unseen = 0;
+  var num = []; num["seen"] = 0; num["review"] = 0; num["unseen"] = 0;
+  var counts = [];
+  var curcounting = 'unseen';
+  var count = 0;
   for(var i = 0; i < state.images.length; ++i) {
-    if(state.images[i].status == 'seen') {
-      ++num_seen;
-    }
-    else if(state.images[i].status == 'review') {
-      ++num_review;
+    if(state.images[i].status == curcounting) {
+      count += 1;
     }
     else {
-      ++num_unseen;
+      counts.push({ what: curcounting, val: count });
+      curcounting = state.images[i].status;
+      count = 0;
     }
   }
-  var progress = (100.0 * num_seen) / state.images.length;
-  $('#progressbar').css('width', progress + '%')
-                   .attr('aria-valuenow', progress + '%');
+  $('#progressdiv').html('');
+  for(var i = 0; i < counts.length; ++i) {
+    var progress = (100.0 * counts[i].val) / state.images.length;
+    var color = (counts[i].what == 'seen' ? 'bg-success'
+              : (counts[i].what == 'review' ? 'bg-danger' : 'bg-primary'));
+
+    $('#progressdiv').append("<div class=\"progress-bar " + color + "\" role=\"progressbar\" "
+      + "style=\"width: " + progress + "%\" aria-valuenow=\"" + progress
+      + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
+  }
 }
 
 function startAnnotation() {
