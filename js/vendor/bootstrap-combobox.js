@@ -38,16 +38,17 @@
     this.options = $.extend({}, $.fn.combobox.defaults, options);
     this.template = this.options.template || this.template
     this.$source = $(element);
-    this.$container = this.setup();
-    this.$element = this.$container.find('input[type=text]');
-    this.$target = this.$container.find('input[type=hidden]');
-    this.$button = this.$container.find('.dropdown-toggle');
     this.$menu = $(this.options.menu).appendTo('body');
     this.matcher = this.options.matcher || this.matcher;
     this.sorter = this.options.sorter || this.sorter;
     this.highlighter = this.options.highlighter || this.highlighter;
+    this.$container = this.setup();
+    this.$element = this.$container.find('input[type=text]');
+    this.$target = this.$container.find('input[type=hidden]');
+    this.$button = this.$container.find('.dropdown-toggle');
     this.shown = false;
     this.selected = false;
+    this.popularitycontest = [];
     this.renderLimit = this.options.renderLimit || -1;
     this.clearIfNoMatch = this.options.clearIfNoMatch;
     this.refresh();
@@ -129,6 +130,7 @@
 
   , select: function () {
       var val = this.$menu.find('.active').attr('data-value');
+      this.popularitycontest[val] = (this.popularitycontest[val] || 0) + 1;
       this.$element.val(this.updater(val)).trigger('change');
       this.$target.val(this.map[val]).trigger('change');
       this.$source.val(this.map[val]).trigger('change');
@@ -217,6 +219,17 @@
         , caseSensitive = []
         , caseInsensitive = []
         , item;
+      if(this.query == '') {
+        var arr = [];
+        while (item = items.shift()) {
+          if(this.popularitycontest[item] === undefined)
+            this.popularitycontest[item] = 0;
+          arr.push({name: item, count: this.popularitycontest[item]});
+        }
+        arr.sort(function(a, b) { return b.count - a.count; });
+
+        return arr.map(obj => obj.name);
+      }
 
       while (item = items.shift()) {
         if (!item.toLowerCase().indexOf(this.query.toLowerCase())) {beginswith.push(item);}

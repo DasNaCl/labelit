@@ -210,11 +210,6 @@ function updateBBOXInfo(what) {
     bbox.dirty = true;
     canvas.requestRenderAll();
     setBBOXControl(true);
-
-    //update_canvas(() => {
-    //  canvas.setActiveObject(bbox);
-    //  setBBOXControl(true);
-    //});
   }
 }
 
@@ -1195,6 +1190,7 @@ $('#classinput').on('input', function() {
   $('#classdropdown').combobox('refresh');
 });
 $('#classinput').trigger("input");
+
 $('#testselect').combobox();
 $('#classdropdown').combobox();
 $('.combobox').on('change', function(){
