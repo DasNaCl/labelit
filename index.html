@@ -84,7 +84,7 @@
 </select>
           </div>
           <h1>Finally, hit</h1>
-          <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />
+          <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input disabled id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />
         </div>
 
         <div id="annot" style="display:none;">
@@ -98,7 +98,7 @@
                 <input id="sex-u" type="radio" name="sex-options" value="undefined" autocomplete="off" onclick="updateBBOXInfo({sex:'undefined'})" checked> <span class="fa-solid fa-venus-mars"></span>
               </label>
               <label class="btn btn-danger disabled">
-                <input id="sex-m" type="radio" name="sex-options" value="mature" autocomplete="off" onclick="updateBBOXInfo({sex:'male'})"> <span class="fa-solid fa-mars"></span>
+                <input id="sex-m" type="radio" name="sex-options" value="adult" autocomplete="off" onclick="updateBBOXInfo({sex:'male'})"> <span class="fa-solid fa-mars"></span>
               </label>
             </div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <!-- Age -->
@@ -110,7 +110,7 @@
     <input id="age-u" type="radio" name="age-options" value="undefined" autocomplete="off" onclick="updateBBOXInfo({age:'undefined'})" checked> <span class="fa-solid fa-question"></span>
   </label>
   <label class="btn btn-danger disabled">
-    <input id="age-m" type="radio" name="age-options" value="mature" autocomplete="off" onclick="updateBBOXInfo({age:'mature'})"> <span class="fa-solid fa-user-graduate"></span>
+    <input id="age-m" type="radio" name="age-options" value="adult" autocomplete="off" onclick="updateBBOXInfo({age:'adult'})"> <span class="fa-solid fa-user-graduate"></span>
   </label>
 </div>
               <div class="btn-group">
@@ -154,8 +154,6 @@
 </div>
             </div>
             <div id="csvspace" style="float:right;min-width:0%;padding-left:1em;overflow:hidden;"></div>
-          </div>
-          <div>
           </div>
         </div>
       </div>

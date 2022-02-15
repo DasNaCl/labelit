@@ -89,7 +89,7 @@ var LabeledRect = fabric.util.createClass(fabric.Rect, {
     this.callSuper('initialize', options);
     this.set('label', options.label || '');
     this.set('fontSize', options.fontSize || 20);
-    this.set('strokeWidth', options.strokeWidth || (this.fontSize / 8.0));
+    this.set('strokeWidth', options.strokeWidth || 2);
     this.set('fill', 'transparent');
     this.set('conf', options.conf || 1.0);
 
@@ -179,7 +179,7 @@ function setBBOXControl(val) {
 
     if(bbox.attrs.age == 'juvenile')
       $('#age-y').prop('checked', true);
-    else if(bbox.attrs.age == 'mature')
+    else if(bbox.attrs.age == 'adult')
       $('#age-m').prop('checked', true);
     else
       $('#age-u').prop('checked', true);
@@ -255,7 +255,7 @@ function display_boxes() {
     var box = state.boxes[i];
     box.set({
       fontSize: 20.0 / Math.max(canvas.viewportTransform[0], canvas.viewportTransform[3]),
-      strokeWidth: (20.0 / Math.max(canvas.viewportTransform[0], canvas.viewportTransform[3]))/ 5.0,
+      strokeWidth: 2.0 / Math.max(canvas.viewportTransform[0], canvas.viewportTransform[3]),
     });
     canvas.add(box);
   }
@@ -573,6 +573,66 @@ function updateprevbutton(idx) {
     $("#prevbutton").prop('disabled', true);
   }
 }
+function addcsvboxes() {
+  if(!hasCsv)
+    return;
+  var csvobj = state.images[state.current_pic].csvobj;
+  var bboxes = csvobj.bounding_boxes;
+
+  var imgw = state.images[state.current_pic].width;
+  var imgh = state.images[state.current_pic].height;
+  for(var i = 0; i < bboxes.length; ++i) {
+    var bbox = bboxes[i];
+
+
+
+    addbox({
+      left: bbox.left * imgw,
+      top: bbox.top * imgh,
+      width: bbox.width * imgw,
+      height: bbox.height * imgh,
+      conf: 1.0,
+      label: csvobj.species_common_name || "undefined",
+      attrs: {
+        sex: (csvobj.sex.split(',')[i] || "undefined").trim().toLowerCase(),
+        age: (csvobj.age.split(',')[i] || "undefined").trim().toLowerCase(),
+      },
+    });
+  }
+
+  state.images[state.current_pic].csvobj.bounding_boxes = [];
+  $('#csvaddboxbutton').hide(200, () => {
+    $('#csvaddboxbutton').remove();
+    $('#csvspace').append('<h5 class="text-justify">No bounding boxes.</h5>');
+  });
+}
+function displayCSV() {
+  if(!hasCsv)
+    return;
+  var csvobj = state.images[state.current_pic].csvobj;
+
+  $('#csvspace').html('');
+
+  var sex = csvobj.sex.replace(/[Ff]emale/, '<span class="fa-solid fa-venus"></span>')
+                      .replace(/[Mm]ale/, '<span class="fa-solid fa-mars"></span>')
+                      .replace(/[Uu]ndefined/, '<span class="fa-solid fa-venus-mars"></span>');
+  var age = csvobj.age.replace(/[Aa]dult/, '<span class="fa-solid fa-user-graduate"></span>')
+                      .replace(/[Jj]uvenile/, '<span class="fa-solid fa-child"></span>')
+                      .replace(/[Uu]ndefined/, '<span class="fa-solid fa-question"></span>');
+  
+  $('#csvspace').append('<h2>From CSV:</h2>');
+  $('#csvspace').append('<h4 class="text-justify">' + csvobj.species_common_name + "</h4>");
+  $('#csvspace').append('<h5 class="text-justify">' + csvobj.species_sci + "</h5>");
+  $('#csvspace').append('<h5 class="text-justify">Sex: ' + sex + "</h5>");
+  $('#csvspace').append('<h5 class="text-justify">Age: ' + age + "</h5>");
+  $('#csvspace').append('<h5 class="text-justify">Count:' + csvobj.count + "</h5>");
+  if(csvobj.bounding_boxes.length != 0) {
+    $('#csvspace').append('<button id="csvaddboxbutton" class="btn btn-success" onclick="addcsvboxes()">Add boxes</button>');
+  }
+  else {
+    $('#csvspace').append('<h5 class="text-justify">No bounding boxes.</h5>');
+  }
+}
 
 // "gameloop"
 function choosePic(idx) {
@@ -586,6 +646,7 @@ function choosePic(idx) {
     applyFilter();
     update_canvas();
     updatePagination();
+    displayCSV();
   });
 }
 
@@ -836,6 +897,7 @@ function mayEnableAnnotButton() {
       return;
     if($('#nojsoncheck').prop('checked')) {
       $('#annotatebutton').prop("disabled", false);
+      $('#csvbutton').prop("disabled", false);
       return;
     }
   }
@@ -938,6 +1000,7 @@ function mayEnableAnnotButton() {
     }
   }
   $('#annotatebutton').prop("disabled", false);
+  $('#csvbutton').prop("disabled", false);
 }
 function loadjson(files) {
   $('#jsoncheckmark').hide();
@@ -980,21 +1043,103 @@ function parseCsv(data, fieldSep, newLine) {
     });
     return grid;
 }
+function basename(path) {
+  return path.split(/[\\/]/).pop();
+}
+function storeCSV(csvobj) {
+  // take care of the metainfo from the csv
+  for(var i = 0; i < state.images.length; ++i) {
+    var row = undefined;
+    for(var j = 0; j < csvobj.filename.length; ++j) {
+      if(csvobj.filename[j] == state.images[i].file.name) {
+        row = j; break;
+      }
+    }
+    if(row === undefined) continue;
+    // now set the info
+    state.images[i].csvobj = {
+      species_common_name: csvobj.species_common_name[row],
+      species_sci: csvobj.species_sci[row],
+      sex: csvobj.sex[row],
+      age: csvobj.age[row],
+      count: csvobj.count[row],
+      bounding_boxes: csvobj.bounding_boxes[row],
+    };
+  }
+}
 function loadcsv(files) {
   var reader = new FileReader();
   reader.onload = function(event) {
       var str = event.target.result;
       var grid = parseCsv(str, ';');
-      if(!grid) {
+      if(!grid || !grid[0] || !grid[0].length) {
         return;
       }
-      for(var i = 0; i < grid[0].length; ++i) {
-        $('#csvspace').append('<p>' + grid[0][i] + "</p>");
-      }
+      hasCsv = true;
       $('#canvasdiv').css('min-width', '80%').css('max-width', '80%');
       $('#csvspace').css('min-width', '20%');
-    hasCsv = true;
-      console.log(grid);
+
+      var csvobject = { filename: [], species_common_name: [], species_sci: [], sex: [], age: [], count: [],
+                        bounding_boxes: [] };
+      var csvhelp = { filename_idx : undefined, species_common_name_idx: undefined, bounding_boxes_idx : undefined,
+                      species_sci_idx: undefined, sex_idx: undefined, age_idx: undefined, count_idx: undefined };
+      // find the indices in the grid
+      for(var i = 0; i < grid[0].length; ++i) {
+        var str = grid[0][i].replace(/['"]+/g, '');
+        if(str == "filename") {
+          csvhelp.filename_idx = i;
+        }
+        else if(str == "species_common_name" || str == "species_common") {
+          csvhelp.species_common_name_idx = i;
+        }
+        else if(str == "species_sci" || str == "species_scientific") {
+          csvhelp.species_sci_idx = i;
+        }
+        else if(str == "sex") {
+          csvhelp.sex_idx = i;
+        }
+        else if(str == "age") {
+          csvhelp.age_idx = i;
+        }
+        else if(str == "count") {
+          csvhelp.count_idx = i;
+        }
+        else if(str == "bounding_boxes") {
+          csvhelp.bounding_boxes_idx = i;
+        }
+      }
+      var transmogrify = function(array, index) {
+        for(var row = 1; row < grid.length; ++row) {
+          if(index == csvhelp.filename_idx) {
+            array.push(basename(grid[row][index]));
+          }
+          else if(index == csvhelp.bounding_boxes_idx) {
+            var reg = /(\d\.\d*)/g;
+            var matches = [];
+            var numbers = [];
+            while((matches = reg.exec(grid[row][index])) != null) {
+              numbers.push(parseFloat(matches[1]));
+            }
+            var bboxes = [];
+            for(var i = 0; i < numbers.length; i += 4) {
+              bboxes.push({left: numbers[i], top: numbers[i+1], width: numbers[i+2], height: numbers[i+3]});
+            }
+            console.log(bboxes);
+            array.push(bboxes);
+          }
+          else {
+            array.push(grid[row][index]);
+          }
+        }
+      };
+      transmogrify(csvobject.filename, csvhelp.filename_idx);
+      transmogrify(csvobject.species_common_name, csvhelp.species_common_name_idx);
+      transmogrify(csvobject.species_sci, csvhelp.species_sci_idx);
+      transmogrify(csvobject.sex, csvhelp.sex_idx);
+      transmogrify(csvobject.age, csvhelp.age_idx);
+      transmogrify(csvobject.count, csvhelp.count_idx);
+      transmogrify(csvobject.bounding_boxes, csvhelp.bounding_boxes_idx);
+      storeCSV(csvobject);
     };
   reader.readAsText(files[0]);
 }
