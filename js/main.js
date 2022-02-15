@@ -826,7 +826,7 @@ function updatePagination() {
     else {
       counts.push({ what: curcounting, val: count });
       curcounting = state.images[i].status;
-      count = 0;
+      count = 1;
     }
   }
   if(count != 0) {
@@ -1124,7 +1124,6 @@ function loadcsv(files) {
             for(var i = 0; i < numbers.length; i += 4) {
               bboxes.push({left: numbers[i], top: numbers[i+1], width: numbers[i+2], height: numbers[i+3]});
             }
-            console.log(bboxes);
             array.push(bboxes);
           }
           else {
