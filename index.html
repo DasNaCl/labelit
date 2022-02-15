@@ -12,6 +12,7 @@
         <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
         <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-combobox.css">
         <style>
             body {
                 padding-top: 50px;
@@ -27,11 +28,6 @@
         <!--[if lt IE 8]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-    <nav class="navbar" role="navigation">
-      <div class="container">
-        <a class="navbar-brand" href="#">Label-It</a>
-      </div>
-    </nav>
 
 <!-- Modal -->
 <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
@@ -44,6 +40,10 @@
         <p>Delete a <i>selected</i> box: [x] or [Backspace] (<i class="fa-solid fa-delete-left"></i>) or [Delete] key</p>
         <p>Mark image as done (<i class="fa-solid fa-eye"></i>) and go to next one: [Space]</p>
         <p>Go to previous/next image: Arrow Left (<i class="fa-solid fa-arrow-left"></i>) or Arrow Right (<i class="fa-solid fa-arrow-right"></i>)</p>
+        <p></p>
+        <p>Use either Tab (&#8677;) or Return (&#11168;) key to choose a class.</p>
+        <p></p>
+        <p>Click [<i class="fa-solid fa-bacteria"></i>] to copy boxes from the image to the left.</p>
         <p></p>
         <p>Close this window: Click anywhere outside this window</p>
       </div>
@@ -80,30 +80,16 @@
           <input style="width:50%;height:2.5em" type="text" id="classinput" placeholder="Dog" value="Steinbock;Reh;Murmeltier;Vogel;Hirsch" />
           <span class="p-4 fs-3">Check:</span>
           <div class="btn-group">
-            <button id="testdropdown" type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              Classes
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdown">
-              <a class="dropdown-item" href="#">Steinbock</a>
-              <a class="dropdown-item" href="#">Reh</a>
-              <a class="dropdown-item" href="#">Murmeltier</a>
-              <a class="dropdown-item" href="#">Vogel</a>
-              <a class="dropdown-item" href="#">Hirsch</a>
-            </ul>
+<select id="testselect" class="combobox w-50 input-large form-control">
+</select>
           </div>
           <h1>Finally, hit</h1>
           <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />
         </div>
 
         <div id="annot" style="display:none;">
-          <!-- Help button for modal-->
-          <button type="button" class="btn btn-primary" onclick="$('#helpModal').modal('show')"> 
-            <i class="fa-solid fa-question"></i>
-          </button>
-          <button class="btn btn-success" onclick="update_canvas()"><span class="fa-solid fa-rotate"></span></button>
-          <button class="btn btn-success" onclick="drawbox()"><i class="fa-solid fa-pen"></i></button>
-&nbsp;&nbsp;&nbsp;
-<!-- Sex -->
+          <div style="text-align:center;">
+            <!-- Sex -->
             <div class="btn-group colors" data-toggle="buttons">
               <label class="btn btn-info disabled">
                 <input id="sex-f" type="radio" name="sex-options" value="juvenile" autocomplete="off" onclick="updateBBOXInfo({sex:'female'})"><span class="fa-solid fa-venus"></span>
@@ -128,17 +114,18 @@
   </label>
 </div>
               <div class="btn-group">
-                <button id="dropdown" type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled>
-                  Class
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdown">
-                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Steinbock'})">Steinbock</a>
-                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Murmeltier'})">Murmeltier</a>
-                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Hirsch'})">Hirsch</a>
-                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Reh'})">Reh</a>
-                  <a class="dropdown-item" href="#" onclick="updateBBOXInfo({label:'Vogel'})">Vogel</a>
-                </ul>
+<select id="classdropdown" class="combobox w-50 input-large form-control">
+</select>
               </div>
+              <br>
+          <!-- Help button for modal-->
+          <button type="button" class="btn btn-primary" onclick="$('#helpModal').modal('show')"> 
+            <i class="fa-solid fa-question"></i>
+          </button>
+          <button class="btn btn-success" onclick="update_canvas()"><span class="fa-solid fa-rotate"></span></button>
+          <button class="btn btn-success" onclick="drawbox()"><i class="fa-solid fa-pen"></i></button>
+          <button disabled id="prevbutton" class="btn btn-success" onclick="useprev()"><i class="fa-solid fa-bacteria"></i></button>
+&nbsp;&nbsp;&nbsp;
           <span class="p-6">&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <!-- Image seen/Unseen -->
 <div class="btn-group colors">
@@ -154,6 +141,7 @@
             </div>
           </div>
           <button class="btn btn-info" onclick="exportData()"><i class="fa-solid fa-file-export"></i></button>
+        </div>
 
           <div style="margin:0;">
             <div id="canvasdiv" style="float:left;min-width:80%;overflow:hidden;">
@@ -179,6 +167,7 @@
         <!--<script src="js/vendor/popper.min.js"></script>-->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         <script src="js/vendor/fabric.min.js"></script>
+        <script src="js/vendor/bootstrap-combobox.js"></script>
 
         <script src="js/main.js"></script>
     </body>

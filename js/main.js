@@ -49,7 +49,7 @@ var XCross = fabric.util.createClass(fabric.Object, {
     this.height = 10000;
 
     this.w1 = this.h2 = 10000;
-    this.h1 = this.w2 = 4;
+    this.h1 = this.w2 = 2;
 
     this.begin_left = null;
     this.begin_top = null;
@@ -89,13 +89,14 @@ var LabeledRect = fabric.util.createClass(fabric.Rect, {
     this.callSuper('initialize', options);
     this.set('label', options.label || '');
     this.set('fontSize', options.fontSize || 20);
-    this.set('strokeWidth', options.strokeWidth || (this.fontSize / 5.0));
+    this.set('strokeWidth', options.strokeWidth || (this.fontSize / 8.0));
     this.set('fill', 'transparent');
     this.set('conf', options.conf || 1.0);
 
     this.updateCol();
 
     this.setControlsVisibility({'mtr':false});
+    this.objectCaching = false;
   },
 
   updateCol: function() {
@@ -136,7 +137,10 @@ var state = {
 };
 
 function setBBOXControl(val) {
-  $('#dropdown').prop('disabled', !val);
+  //$('#classdropdown').prop('disabled', !val);
+  $('.combobox').prop('disabled', !val);
+  $('.dropdown-toggle').prop('disabled', !val);
+  $('div.combobox-container input').val('');
 
   $('#age-y').prop('checked', false).parent().toggleClass('disabled', !val);
   $('#age-u').prop('checked', false || !val).parent().toggleClass('disabled', !val);
@@ -157,8 +161,14 @@ function setBBOXControl(val) {
       $('#sex-f').prop('checked', false).parent().toggleClass('disabled', true);
       $('#sex-u').prop('checked', false).parent().toggleClass('disabled', true);
       $('#sex-m').prop('checked', false).parent().toggleClass('disabled', true);
+
+      $('.combobox').prop('disabled', true);
+      $('.dropdown-toggle').prop('disabled', true);
+      $('div.combobox-container input').val('');
       return;
     }
+    if(bbox.label != "undefined")
+      $('div.combobox-container input').val(bbox.label);
 
     if(bbox.attrs.sex == 'female')
       $('#sex-f').prop('checked', true);
@@ -176,9 +186,11 @@ function setBBOXControl(val) {
   }
 }
 function updateBBOXInfo(what) {
-  if($('#dropdown').prop('disabled'))
+  if($('#age-y').prop('disabled'))
     return;
   var bbox = canvas.getActiveObject();
+  if(bbox == null)
+    return;
 
   var old_conf = bbox.conf;
   // always set confidence to 1.0 if any property is changed by the user
@@ -320,6 +332,8 @@ function addbox(desc, dirty = false) {
       scaleX: sX,
       scaleY: sY,
     });
+    opt.transform.target.dirty = true;
+    canvas.requestRenderAll();
   });
   last.on('mouseup', (opt) => {
     if(last.is_scaling) {
@@ -378,6 +392,23 @@ function applyFilter() {
   }
 }
 
+function useprev() {
+  var prevpic = (state.current_pic > 0 ? state.current_pic - 1 : state.images.length-1);
+  var prev = state.images[prevpic].bboxes;
+  var imgw = state.images[prevpic].width;
+  var imgh = state.images[prevpic].height;
+  for(var i = 0; i < prev.length; ++i) {
+    addbox({
+      left: prev[i].left * imgw,
+      top: prev[i].top * imgh,
+      width: prev[i].width * imgw,
+      height: prev[i].height * imgh,
+      conf: prev[i].conf,
+      label: prev[i].label,
+      attrs: prev[i].attrs,
+    });
+  }
+}
 
 function drawbox() {
   let xcross = new XCross();
@@ -533,9 +564,20 @@ function reloadImgStatus() {
   }
 }
 
+function updateprevbutton(idx) {
+  if((idx - 1 == state.current_pic)
+  || (idx != state.current_pic && 0 <= idx && idx <= state.images.length && state.images[idx].width)) {
+    $("#prevbutton").prop('disabled', false);
+  }
+  else {
+    $("#prevbutton").prop('disabled', true);
+  }
+}
+
 // "gameloop"
 function choosePic(idx) {
   storebboxes();
+  updateprevbutton(idx);
 
   state.current_pic = idx;
   reloadImgStatus();
@@ -653,7 +695,7 @@ function exportData() {
       for(var e in undefined_imgs) {
         str += e;
       }
-      alert("Some images have boxes with label \"undefined\":\n" + str
+      console.log("Some images have boxes with label \"undefined\":\n" + str
           + "\nNote: this is expected if you want to continue later on where you left off.");
     }
     downloadObjectAsJson(coco, date.toISOString().slice(0,10).replace(/-/g,"") + "_coco");
@@ -689,8 +731,8 @@ function updatePagination() {
     "</a></li>").appendTo(ul);
 
   var half = 5;
-  var min = (state.current_pic > half ? state.current_pic - half : 0);
-  var max = (state.images.length - state.current_pic > half ? state.current_pic + half + Math.max(half - state.current_pic, 0) : state.images.length);
+  var min = Math.max(0, (state.current_pic > half ? state.current_pic - half : 0));
+  var max = Math.min(state.images.length, (state.images.length - state.current_pic > half ? state.current_pic + half + Math.max(half - state.current_pic, 0) : state.images.length));
 
   if(state.images.length - state.current_pic < half) {
     min = Math.max(0, Math.min(min, min - (half - (state.images.length - state.current_pic))));
@@ -741,14 +783,16 @@ function updatePagination() {
   }
 }
 
+// go to annotation phase
 function startAnnotation() {
-  // go to annotation phase
+  $('.combobox').prop('disabled', true);
+  $('.dropdown-toggle').prop('disabled', true);
+  $('div.combobox-container input').val('');
   $('#initial-menu').hide(200, function() {
     updatePagination();
     $('#annot').show(200, function() {
       var w = window.innerWidth * 0.8;
       if(hasCsv) {
-        console.log($('#canvasdiv').innerWidth());
         w = $('#canvasdiv').innerWidth();
       }
       canvas = new fabric.Canvas('canvas', {
@@ -988,27 +1032,40 @@ function readfiles(files) {
 $('#classinput').on('input', function() {
   var text = $('#classinput').val();
   var match = text.split(';')
-  var ul = $('#testdropdown + ul.dropdown-menu');
-  ul.html('');
-  var ul2 = $('#dropdown + ul.dropdown-menu');
-  ul2.html('');
+  $('#testselect').html('');
+  $('#classdropdown').html('');
   label2rainbowstep = [];
   var i = 0;
   for(var a in match) {
     if(match[a] == "" || !(/\S/.test(match[a])))
       continue;
-    $("<a class=\"dropdown-item\" href=\"#\">" + match[a] + "</a>").appendTo(ul);
-    $("<a class=\"dropdown-item\" href=\"#\" onclick=\"updateBBOXInfo({label:'" +
-      match[a] + "'})\">" + match[a] + "</a>").appendTo(ul2);
+    $("<option value=\"" + match[a] + "\">" +
+      match[a] + "</option>").appendTo($('#testselect'));
+    $("<option value=\"" + match[a] + "\">" +
+      match[a] + "</option>").appendTo($('#classdropdown'));
 
     label2rainbowstep[match[a]] = i++;
   }
   label2rainbowstep_len = i;
+  $('#testselect').combobox('refresh');
+  $('#classdropdown').combobox('refresh');
 });
 $('#classinput').trigger("input");
+$('#testselect').combobox();
+$('#classdropdown').combobox();
+$('.combobox').on('change', function(){
+  var option = $(this).find('option:selected');
+  if($(this).attr('id') == 'classdropdown') {
+    updateBBOXInfo({label:option.val()});
+
+    $(':focus').blur()
+  }
+})
 
 
 $(document).on('keyup', function(e) {
+  if($('#annot').css('display') == 'none')
+    return;
   if(e.key == "Delete" || e.key == "Backspace" || e.key == "x") {
     var bbox = canvas.getActiveObject();
     if(bbox && bbox.conf) {
@@ -1050,6 +1107,4 @@ function markImg(what) {
   }
   updatePagination();
 }
-
-
 
