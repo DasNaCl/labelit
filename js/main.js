@@ -466,13 +466,14 @@ function updateViewport() {
   var mh = canvas.height / imgh;
   var scale = Math.min(mw, mh);
 
+  console.log({mw: mw, mh: mh});
   canvas.viewportTransform = [
     scale,
     0,
     0,
     scale,
-    0, //(mh < mw ? (canvas.width * scale) / 2.0 : 0.0),
-    0, //(mw < mh ? (canvas.height * scale) / 2.0 : 0.0),
+    (mh < mw ? (imgw * mw - imgw * mh) / 2.0 : 0),
+    (mw < mh ? (imgh * mh - imgh * mw) / 2.0 : 0),
   ];
 }
 function canvasevents() {
