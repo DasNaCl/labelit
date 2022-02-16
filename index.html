@@ -50,7 +50,39 @@
     </div>
   </div>
 </div>
+<div aria-live="polite" aria-atomic="true" style="z-index:10;position: absolute; top: 0; right: 0;" class="d-flex justify-content-center align-items-center w-100">
+  <div class="toast-container position-absolute top-0 end-0 p-3">
 
+    <div id="success-toast" class="toast translate-middle-x" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto text-success">Nice!</strong>
+        <small class="text-muted">just now</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div id="success-toast-body" class="toast-body">
+        Your selected files are available.
+      </div>
+    </div>
+    <div id="tip-toast" class="toast translate-middle-x" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto text-info"><i class="fa-solid fa-lightbulb"></i> Did you know?</strong>
+        <small class="text-muted">just now</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div id="tip-toast-body" class="toast-body">
+      </div>
+    </div>
+    <div id="error-toast" class="toast translate-middle-x" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto text-danger">ERROR</strong>
+        <small class="text-muted">just now</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div id="error-toast-body" class="toast-body">
+      </div>
+    </div>
+  </div>
+</div>
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
       <div class="container">
@@ -85,6 +117,11 @@
           </div>
           <h1>Finally, hit</h1>
           <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input disabled id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          <div class="form-check form-switch">
+            <input type="checkbox" checked class="form-check-input" id="tipsenabled">
+            <label class="form-check-label" for="tipsenabled">Enable tips</label>
+          </div>
         </div>
 
         <div id="annot" style="display:none;">
@@ -119,33 +156,33 @@
               </div>
               <br>
           <!-- Help button for modal-->
-          <button type="button" class="btn btn-primary" onclick="$('#helpModal').modal('show')"> 
+          <button type="button" class="btn btn-primary" onclick="$('#helpModal').modal('show')" data-bs-toggle="tooltip" data-bs-placement="top" title="Hopefully helpful information"> 
             <i class="fa-solid fa-question"></i>
           </button>
-          <button class="btn btn-success" onclick="update_canvas()"><span class="fa-solid fa-rotate"></span></button>
-          <button class="btn btn-success" onclick="drawbox()"><i class="fa-solid fa-pen"></i></button>
-          <button disabled id="prevbutton" class="btn btn-success" onclick="useprev()"><i class="fa-solid fa-bacteria"></i></button>
+          <button class="btn btn-success" onclick="update_canvas_btn()" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this if something is weird"><span class="fa-solid fa-rotate"></span></button>
+          <button class="btn btn-success" onclick="drawbox()" data-bs-toggle="tooltip" data-bs-placement="top" title="Draw a bounding box"><i class="fa-solid fa-pen"></i></button>
+          <button disabled id="prevbutton" class="btn btn-success" onclick="useprev()" data-bs-toggle="tooltip" data-bs-placement="top" title="Clone from the previous one, like bacteria."><i class="fa-solid fa-bacteria"></i></button>
 &nbsp;&nbsp;&nbsp;
           <span class="p-6">&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <!-- Image seen/Unseen -->
 <div class="btn-group colors">
-    <button class="btn btn-primary active" id="btnunseen" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="unseen" autocomplete="off" onclick="markImg('unseen')" checked ><span class="fa-solid fa-eye-slash"></span>
-    <button class="btn btn-danger" id="btnreview" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="review" autocomplete="off" onclick="markImg('review')"> <span class="fa-solid fa-magnifying-glass"></span>
-    <button class="btn btn-success" id="btnseen" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="seen" autocomplete="off" onclick="markImg('seen')"><span class="fa-solid fa-eye"></span>
+    <button class="btn btn-primary active" id="btnunseen" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="unseen" autocomplete="off" onclick="markImgBtn('unseen')" checked ><span class="fa-solid fa-eye-slash"></span>
+    <button class="btn btn-danger" id="btnreview" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="review" autocomplete="off" onclick="markImgBtn('review')"> <span class="fa-solid fa-magnifying-glass"></span>
+    <button class="btn btn-success" id="btnseen" data-toggle="button" type="button" aria-pressed="false" autocomplete="off" name="seen-options" value="seen" autocomplete="off" onclick="markImgBtn('seen')"><span class="fa-solid fa-eye"></span>
 </div>
           <span class="p-6">&nbsp;&nbsp;&nbsp;&nbsp;</span>
           <div class="btn-group colors">
-            <input type="number" class="form-control w-50" id="filternumber" aria-describedby="numberHelp" min="0" max="1.0" value="0.6" step="0.05" oninput="applyFilter()">
+            <input type="number" class="form-control w-50" id="filternumber" aria-describedby="numberHelp" min="0" max="1.0" value="0.6" step="0.05" oninput="applyFilter()" data-bs-toggle="tooltip" data-bs-placement="top" title="Any confidence less than this value may be filtered.">
             <div class="btn-group-toggle" data-toggle="buttons">
-              <label class="btn btn-info" ><input id="filtercheckbox" type="checkbox" autocomplete="off" onclick="applyFilter()"><i class="fa-solid fa-filter"></i></label>
+              <label class="btn btn-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Automatically filter Bounding Boxes with low confidence."><input id="filtercheckbox" type="checkbox" autocomplete="off" onclick="applyFilter()" ><i class="fa-solid fa-filter"></i></label>
             </div>
           </div>
-          <button class="btn btn-info" onclick="exportData()"><i class="fa-solid fa-file-export"></i></button>
+          <button class="btn btn-info" onclick="exportData()" data-bs-toggle="tooltip" data-bs-placement="top" title="Export COCO data"><i class="fa-solid fa-file-export"></i></button>
         </div>
 
           <div style="margin:0;">
             <div id="canvasdiv" style="float:left;min-width:80%;overflow:hidden;">
-            <canvas id="canvas"></canvas>
+            <canvas style="border: solid 2px white;" id="canvas"></canvas>
 <nav aria-label="Image navigation">
   <ul id="controlul" class="pagination justify-content-center">
   </ul>

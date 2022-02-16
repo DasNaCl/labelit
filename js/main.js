@@ -1,5 +1,25 @@
 
+const TIP_THRESHHOLD = 4;
+const REQUEST_BRAKE_TIME = 90 * 60 * 1000;
+
+var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+var toastList = toastElList.map(function (toastEl) {
+  var delay = (toastEl.id == 'success-toast' ? 2500
+            : (toastEl.id == 'tip-toast' ? 10000 : 5000));
+  return new bootstrap.Toast(toastEl, { delay: delay })
+})
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl, { delay: 300 })
+})
 var hasCsv = false;
+
+function fire_tip(text) {
+  if($('#tipsenabled').prop('checked')) {
+      $('#tip-toast-body').html(text);
+      bootstrap.Toast.getInstance(document.getElementById('tip-toast')).show(400);
+  }
+}
 
 var deleteIcon = "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
 var deleteImg = document.createElement('img');
@@ -17,7 +37,7 @@ fabric.Object.prototype.controls.deleteControl = new fabric.Control({
   offsetY: -16,
   offsetX: 16,
   cursorStyle: 'pointer',
-  mouseUpHandler: deletebox,
+  mouseUpHandler: deleteboxbyicon,
   render: renderDeleteIcon,
   cornerSize: 24
 });
@@ -51,8 +71,10 @@ var XCross = fabric.util.createClass(fabric.Object, {
     this.w1 = this.h2 = 10000;
     this.h1 = this.w2 = 2;
 
-    this.begin_left = null;
-    this.begin_top = null;
+    this.begin_left = undefined;
+    this.begin_top = undefined;
+
+    this.objectCaching = false;
   },
 
   _render: function(ctx) {
@@ -266,6 +288,17 @@ function update_canvas(callback = function() {}) {
     callback();
   });
 }
+function update_canvas_btn() {
+  if(this.statistics) {
+    if(this.statistics++ == TIP_THRESHHOLD) {
+      fire_tip('Weird stuff is still happening?<br>Open an issue on <a target="_blank" href="https://github.com/DasNaCl/labelit">github.com/DasNacl/labelit</a> and describe what is happening.');
+    }
+  }
+  else {
+    this.statistics = 1;
+  }
+  return update_canvas();
+}
 
 function addbox(desc, dirty = false) {
   state.boxes.push(new LabeledRect(desc));
@@ -372,6 +405,17 @@ function deletebox(eventData, transform) {
   }
   update_canvas();
 }
+function deleteboxbyicon(eventData, transform) {
+  if(this.statistics) {
+    if(this.statistics++ == TIP_THRESHHOLD) {
+      fire_tip('Delete a <i>selected</i> box: [x] or [Backspace] (<i class="fa-solid fa-delete-left"></i>) or [Delete] key.');
+    }
+  }
+  else {
+    this.statistics = 1;
+  }
+  return deletebox(eventData, transform);
+}
 function applyFilter() {
   if($('#filtercheckbox').prop('checked')) {
     var todel = [];
@@ -414,17 +458,19 @@ function drawbox() {
 }
 
 function updateViewport() {
-  var scale = Math.min(
-    canvas.width / state.images[state.current_pic].width,
-    canvas.height / state.images[state.current_pic].height);
+  var imgw = state.images[state.current_pic].width;
+  var imgh = state.images[state.current_pic].height;
+  var mw = canvas.width / imgw;
+  var mh = canvas.height / imgh;
+  var scale = Math.min(mw, mh);
 
   canvas.viewportTransform = [
     scale,
     0,
     0,
     scale,
-    0,
-    0,
+    (mh < mw ? (canvas.width * scale) / 2.0 : 0.0),
+    (mw < mh ? (canvas.height * scale) / 2.0 : 0.0),
   ];
 }
 function canvasevents() {
@@ -432,7 +478,9 @@ canvas.on(
   'mouse:move', function(opt) {
     if(state.xcross) {
       var p = canvas.getPointer(opt.e);
-      state.xcross.set({ left: p.x, top: p.y, h1: 4 / canvas.getZoom(), w2: 4 / canvas.getZoom() });
+      var x = Math.min(state.images[state.current_pic].width, Math.max(0, p.x));
+      var y = Math.min(state.images[state.current_pic].height, Math.max(0, p.y));
+      state.xcross.set({ left: x, top: y, h1: 2 / canvas.getZoom(), w2: 2 / canvas.getZoom() });
       this.requestRenderAll();
     }
     if(this.isDragging) {
@@ -453,7 +501,7 @@ canvas.on('mouse:wheel', function(opt) {
     if(zoom < state.max_zoom) zoom = state.max_zoom;
     canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
     if(state.xcross) {
-      state.xcross.set({ h1: 4 / zoom, w2: 4 / zoom });
+      state.xcross.set({ h1: 2 / zoom, w2: 2 / zoom });
     }
     this.requestRenderAll();
     opt.e.preventDefault();
@@ -462,6 +510,7 @@ canvas.on('mouse:wheel', function(opt) {
 canvas.on('mouse:down', function(opt) {
     if (opt.e.altKey === true || opt.button == 2) {
       this.isDragging = true;
+      this.bkpselection = this.selection;
       this.selection = false;
       this.lastPosX = opt.e.clientX;
       this.lastPosY = opt.e.clientY;
@@ -471,18 +520,28 @@ canvas.on('mouse:down', function(opt) {
       this.requestRenderAll();
       setBBOXControl(true);
     }
+    if (!state.xcross && (opt.target == null || opt.target.attrs === undefined)) {
+      if(this.clickednowhere) {
+        if(this.clickednowhere++ == 2) {
+          fire_tip('Press and hold the middle mouse button to move. You may as well use the left mousebutton and hold the modifier [Alt] key.');
+        }
+      }
+      else {
+        this.clickednowhere = 1;
+      }
+    }
     if (state.xcross && !this.isDragging) {
-      if (!state.xcross.begin_top) {
+      if (state.xcross.begin_top === undefined) {
         var p = canvas.getPointer(opt.e);
-        state.xcross.begin_top = p.y;
-        state.xcross.begin_left = p.x;
+        state.xcross.begin_left = Math.min(state.images[state.current_pic].width, Math.max(0, p.x));
+        state.xcross.begin_top  = Math.min(state.images[state.current_pic].height, Math.max(0, p.y));
       }
     }
   });
 canvas.on('mouse:up', function(e) {
     if (state.xcross && !this.isDragging) {
-      if (state.xcross.begin_top) {
-        this.selection = false;
+      if (state.xcross.begin_top !== undefined) {
+        this.bkpselection = this.selection = false;
         var p = canvas.getPointer(e);
         var x = state.xcross.begin_left;
         var y = state.xcross.begin_top;
@@ -490,6 +549,15 @@ canvas.on('mouse:up', function(e) {
         var h = Math.abs(p.y - y);
         if(p.x < x) x = p.x;
         if(p.y < y) y = p.y;
+
+        x = Math.min(state.images[state.current_pic].width, Math.max(0, x));
+        y = Math.min(state.images[state.current_pic].height, Math.max(0, y));
+        if(x + w - state.images[state.current_pic].width > 0) {
+          w = state.images[state.current_pic].width - x;
+        }
+        if(y + h - state.images[state.current_pic].height > 0) {
+          h = state.images[state.current_pic].height - y;
+        }
         addbox({
           left: x,
           top: y,
@@ -503,6 +571,7 @@ canvas.on('mouse:up', function(e) {
         update_canvas(() => canvas.setActiveObject(state.boxes[state.boxes.length-1]));
       }
     }
+    this.selection = this.bkpselection;
     this.isDragging = false;
     if (e.target) {
       e.target.opacity = 1.0;
@@ -753,6 +822,8 @@ function exportData() {
       }
       console.log("Some images have boxes with label \"undefined\":\n" + str
           + "\nNote: this is expected if you want to continue later on where you left off.");
+      $('#error-toast-body').text("Some images were not present in the JSON. Check them out by [RightClick] -> Inspect and then read what is written on the console.");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
     }
     downloadObjectAsJson(coco, date.toISOString().slice(0,10).replace(/-/g,"") + "_coco");
   }
@@ -839,8 +910,16 @@ function updatePagination() {
   }
 }
 
+function requestBreak() {
+  fire_tip('You\'ve been labeling for about an hour. Consider taking a break.');
+  setTimeout(requestBreak, REQUEST_BRAKE_TIME);
+}
+
 // go to annotation phase
 function startAnnotation() {
+  if($('#tipsenabled').prop('checked')) {
+    setTimeout(requestBreak, REQUEST_BRAKE_TIME);
+  }
   $('.combobox').prop('disabled', true);
   $('.dropdown-toggle').prop('disabled', true);
   $('div.combobox-container input').val('');
@@ -859,6 +938,9 @@ function startAnnotation() {
       });
       canvasevents();
       choosePic(0);
+
+      $('#success-toast-body').text("Happy Annotating! :^)");
+      bootstrap.Toast.getInstance(document.getElementById('success-toast')).show(100);
     });
   });
 }
@@ -879,6 +961,7 @@ function nojson() {
 
     $('#jsoncheckmark').hide();
     $('#annotatebutton').prop("disabled", true);
+    $('#csvbutton').prop("disabled", true);
   }
 }
 function jsonformatupdate() {
@@ -906,7 +989,9 @@ function mayEnableAnnotButton() {
     var catstring = "";
     var catid2cat = [];
     if(!state.spec.categories) {
-      alert("Unexpected JSON file format.");
+      $('#error-toast-body').text("Provided JSON is not in COCO format.");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+
       $('#jsoncheckmark').hide(100);
       $('#jsonbutton').val('');
       return;
@@ -924,8 +1009,9 @@ function mayEnableAnnotButton() {
       img2imgid[state.spec.images[i].file_name] = state.spec.images[i].id;
     }
     for(var j = 0; j < state.images.length; ++j) {
-      if(state.spec.images[img2imgid[state.images[j].file.name]].status) {
-        state.images[j].status = state.spec.images[img2imgid[state.images[j].file.name]].status;
+      var specimg = state.spec.images[img2imgid[state.images[j].file.name]];
+      if(specimg && specimg.status) {
+        state.images[j].status = specimg.status;
       }
     }
     for(var j = 0; j < state.images.length; ++j) {
@@ -957,7 +1043,8 @@ function mayEnableAnnotButton() {
       for(var i = 0; i < state.spec.images.length; ++i) {
         var imginfo = state.spec.images[i];
         if(!(imginfo.file)) {
-          alert("Unexpected JSON file format.");
+          $('#error-toast-body').text("Provided JSON is not in MegaDetector format.");
+          bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
           $('#jsoncheckmark').hide(100);
           $('#jsonbutton').val('');
           return;
@@ -973,7 +1060,9 @@ function mayEnableAnnotButton() {
       }
     }
     if(unmatched != "") {
-      alert("JSON does not contain:\n" + unmatched + "\n(you may still annotate it)");
+      console.log("JSON does not contain:\n" + unmatched + "\n(you may still annotate them, this message is only there to help debugging if you expected all images to be in the JSON)");
+      $('#error-toast-body').text("Some images were not present in the JSON. Check them out by [RightClick] -> Inspect and then read what is written on the console.");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
     }
     // add bboxes to the images
     for(var i = 0; i < matches.length; ++i) {
@@ -1006,12 +1095,15 @@ function loadjson(files) {
       try {
         content = JSON.parse(str);
       } catch (e) {
-        alert("not a json file");
+        $('#error-toast-body').text("You did not select a JSON file.");
+        bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
         $('#jsonbutton').val('');
         return ;
       }
       $('#bag').toggle();
       $('#jsoncheckmark').show(500, mayEnableAnnotButton);
+      $('#success-toast-body').text("Your selected files are available.");
+      bootstrap.Toast.getInstance(document.getElementById('success-toast')).show(100);
 
       state.spec = content;
     };
@@ -1145,11 +1237,11 @@ function readfiles(files) {
   if(files.length == 0)
     return;
   $('#filecheckmark').hide();
-  var ignored = "";
+  var ignored = [];
   var count = 0;
   for(var i = 0; i < files.length; i++) {
     if(!isImage(files[i])) {
-      ignored += "\"" + files[i].name + "\"\n";
+      ignored.push("\"" + files[i].name + "\"");
     }
     else {
       state.images[i] = state.images[i] ? state.images[i] : {};
@@ -1158,13 +1250,18 @@ function readfiles(files) {
       ++count;
     }
   }
-  if(ignored != "") {
-    alert("The following files do not appear to be images and are thus ignored:\n" + ignored);
+  if(ignored.length > 0) {
+    $('#error-toast-body').text("The following files do not appear to be images and are thus ignored: " + ignored.join(", "));
+    bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
   }
-  if(count > 0)
+  if(count > 0) {
     $('#filecheckmark').show(500, mayEnableAnnotButton);
-  else
+    $('#success-toast-body').text("Your selected files are available.");
+    bootstrap.Toast.getInstance(document.getElementById('success-toast')).show(100);
+  }
+  else {
     $('#filecheckmark').hide();
+  }
 }
 
 // handle logic of little test box for classes
@@ -1246,5 +1343,17 @@ function markImg(what) {
     choosePic(next_pic);
   }
   updatePagination();
+}
+function markImgBtn(what) {
+  if(this.statistics && what == 'seen') {
+    if(this.statistics == TIP_THRESHHOLD) {
+      fire_tip('Hit [Space] to mark current images as done (<i class="fa-solid fa-eye"></i>) and go to next one.');
+    }
+    this.statistics += 1;
+  }
+  else {
+    this.statistics = 1;
+  }
+  return markImg(what);
 }
 
