@@ -2,6 +2,8 @@
 const TIP_THRESHHOLD = 4;
 const REQUEST_BRAKE_TIME = 90 * 60 * 1000;
 
+const MIN_BBOX_AREA = 10 * 10;
+
 var toastElList = [].slice.call(document.querySelectorAll('.toast'))
 var toastList = toastElList.map(function (toastEl) {
   var delay = (toastEl.id == 'success-toast' ? 2500
@@ -558,15 +560,21 @@ canvas.on('mouse:up', function(e) {
         if(y + h - state.images[state.current_pic].height > 0) {
           h = state.images[state.current_pic].height - y;
         }
-        addbox({
-          left: x,
-          top: y,
-          width: w,
-          height: h,
-          conf: 1.0,
-          label: "undefined",
-          attrs: { sex: "undefined", age: "undefined" },
-        });
+        if(w * h <= MIN_BBOX_AREA) {
+          $('#error-toast-body').text("No bounding box added. Area too small!");
+          bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+        }
+        else {
+          addbox({
+            left: x,
+            top: y,
+            width: w,
+            height: h,
+            conf: 1.0,
+            label: "undefined",
+            attrs: { sex: "undefined", age: "undefined" },
+          });
+        }
         state.xcross = null;
         update_canvas(() => canvas.setActiveObject(state.boxes[state.boxes.length-1]));
       }
