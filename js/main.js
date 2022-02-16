@@ -471,8 +471,8 @@ function updateViewport() {
     0,
     0,
     scale,
-    (mh < mw ? (canvas.width * scale) / 2.0 : 0.0),
-    (mw < mh ? (canvas.height * scale) / 2.0 : 0.0),
+    0, //(mh < mw ? (canvas.width * scale) / 2.0 : 0.0),
+    0, //(mw < mh ? (canvas.height * scale) / 2.0 : 0.0),
   ];
 }
 function canvasevents() {
