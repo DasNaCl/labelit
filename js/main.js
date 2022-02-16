@@ -263,7 +263,7 @@ function display_img(idx, callback) {
     state.images[idx].bboxes = [];
     state.images[idx].width = oImg.width;
     state.images[idx].height = oImg.height;
-    state.max_zoom = Math.min(canvas.width / oImg.width, canvas.height / oImg.height);
+    state.max_zoom = Math.min(canvas.width / oImg.width, canvas.height / oImg.height) - 0.1;
 
     callback();
   });
