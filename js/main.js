@@ -1047,6 +1047,10 @@ function mayEnableAnnotButton() {
   }
   else {
     for(var j = 0; j < state.images.length; ++j) {
+      if(state.images[j].file === undefined) {
+        console.log({j: j, img: state.images[j]});
+        continue;
+      }
       var img = state.images[j].file;
       var added = false;
       for(var i = 0; i < state.spec.images.length; ++i) {
