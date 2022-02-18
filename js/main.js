@@ -6,8 +6,8 @@ const MIN_BBOX_AREA = 10 * 10;
 
 var toastElList = [].slice.call(document.querySelectorAll('.toast'))
 var toastList = toastElList.map(function (toastEl) {
-  var delay = (toastEl.id == 'success-toast' ? 2500
-            : (toastEl.id == 'tip-toast' ? 10000 : 5000));
+  var delay = (toastEl.id == 'success-toast' ? 5000
+            : (toastEl.id == 'tip-toast' ? 10000 : 10000));
   return new bootstrap.Toast(toastEl, { delay: delay })
 })
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
