@@ -1047,10 +1047,6 @@ function mayEnableAnnotButton() {
   }
   else {
     for(var j = 0; j < state.images.length; ++j) {
-      if(state.images[j] === undefined || state.images[j].file === undefined) {
-        console.log({j: j, img: state.images[j]});
-        continue;
-      }
       var img = state.images[j].file;
       var added = false;
       for(var i = 0; i < state.spec.images.length; ++i) {
@@ -1257,9 +1253,9 @@ function readfiles(files) {
       ignored.push("\"" + files[i].name + "\"");
     }
     else {
-      state.images[i] = state.images[i] ? state.images[i] : {};
-      state.images[i].file = files[i];
-      state.images[i].status = 'unseen';
+      state.images[count] = state.images[count] ? state.images[count] : {};
+      state.images[count].file = files[count];
+      state.images[count].status = 'unseen';
       ++count;
     }
   }
