@@ -470,7 +470,6 @@ function updateViewport() {
   var mh = canvas.height / imgh;
   var scale = Math.min(mw, mh);
 
-  console.log({mw: mw, mh: mh});
   canvas.viewportTransform = [
     scale,
     0,
@@ -627,8 +626,8 @@ function storebboxes() {
 function reloadImgStatus() {
   var st = state.images[state.current_pic].status;
 
-  $('#btnunseen').prop('checked', false);
-  $('#btnreview').prop('checked', false);
+  $('#btnunseen').prop('checked', false).css('active', false);
+  $('#btnreview').prop('checked', false).css('active', false);
 
   var nothing_undefined = true;
   for(var i = 0; i < state.boxes.length; ++i) {
@@ -637,17 +636,16 @@ function reloadImgStatus() {
       break;
     }
   }
-  $('#btnseen').prop('checked', false).prop('disabled', !nothing_undefined);
-  console.log(nothing_undefined);
+  $('#btnseen').prop('checked', false).css('active', false).prop('disabled', !nothing_undefined);
 
   if(st == 'review') {
-    $('#btnreview').prop('checked', true);
+    $('#btnreview').prop('checked', true).css('active', true);
   }
   else if(st == 'seen') {
-    $('#btnseen').prop('checked', true);
+    $('#btnseen').prop('checked', true).css('active', true);
   }
   else {
-    $('#btnunseen').prop('checked', true);
+    $('#btnunseen').prop('checked', true).css('active', true);
   }
 }
 
@@ -876,30 +874,43 @@ function updatePagination() {
   var ul = $('#controlul');
   ul.html('');
   $("<li class=\"page-item" + (state.current_pic == 0 ? " disabled" : "") +
-    "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(state.current_pic-1)\" aria-label=\"Previous\">" +
+    "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(prev_pic_number())\" aria-label=\"Previous\">" +
     "<span aria-hidden=\"true\">&laquo;</span><span class=\"sr-only\">Previous</span><br>&nbsp;" +
     "</a></li>").appendTo(ul);
 
+  var pics = []; var pic_count = 0; var curpic = 0;
+  for(var i = 0; i < state.images.length; ++i) {
+    var status = state.images[i].status;
+    var filter = ((status == "review" && $("#filterreview").prop('checked'))
+               || (status == "seen" && $("#filterseen").prop('checked')));
+    if(!filter || state.current_pic == i) {
+      pics[pic_count++] = i;
+      if(state.current_pic == i) {
+        curpic = pic_count - 1;
+      }
+    }
+  }
   var half = 5;
-  var min = Math.max(0, (state.current_pic > half ? state.current_pic - half : 0));
-  var max = Math.min(state.images.length, (state.images.length - state.current_pic > half ? state.current_pic + half + Math.max(half - state.current_pic, 0) : state.images.length));
+  var min = Math.max(0, (curpic > half ? curpic - half : 0));
+  var max = Math.min(pics.length, (pics.length - curpic > half ? curpic + half + Math.max(half - curpic, 0) : pics.length));
 
-  if(state.images.length - state.current_pic < half) {
-    min = Math.max(0, Math.min(min, min - (half - (state.images.length - state.current_pic))));
+  if(pics.length - curpic < half) {
+    min = Math.max(0, Math.min(min, min - (half - (pics.length - curpic))));
   }
   for(var i = min; i < max; ++i) {
-    var status = state.images[i].status;
+    var status = state.images[pics[i]].status;
     var text = status == 'unseen' ? "<span class=\"fa-solid fa-eye-slash\"></span>"
              : (status == 'review' ? "<span class=\"fa-solid fa-magnifying-glass\"></span>"
                                    : "<span class=\"fa-solid fa-eye\"></span>");
 
-    $("<li class=\"page-item" + (state.current_pic == i ? " active" : "") +
+    var activestr = state.current_pic == pics[i] ? " active" : "";
+    $("<li class=\"page-item" + activestr +
       "\"><span style=\"text-align:center;\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic("
-      + i + ");\">" + text + "<br>" + (i + 1)
+      + pics[i] + ");\">" + text + "<br>" + (pics[i] + 1)
       + "</a></span></li>").appendTo(ul);
   }
   $("<li class=\"page-item" + (state.current_pic + 1 < state.images.length ? "" : " disabled") +
-    "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(state.current_pic+1)\" aria-label=\"Next\">" +
+    "\"><a class=\"page-link\" href=\"#\" onclick=\"choosePic(next_pic_number())\" aria-label=\"Next\">" +
     "<span aria-hidden=\"true\">&raquo;</span><span class=\"sr-only\">Next</span><br>&nbsp;" +
     "</a></li>").appendTo(ul);
 
@@ -931,6 +942,7 @@ function updatePagination() {
       + "style=\"width: " + progress + "%\" aria-valuenow=\"" + progress
       + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
   }
+  reloadImgStatus();
 }
 
 function requestBreak() {
@@ -1323,6 +1335,46 @@ $('.combobox').on('change', function(){
   }
 })
 
+function next_pic_number() {
+  var next_pic = state.current_pic + 1;
+  if(next_pic >= state.images.length) {
+    next_pic = 0;
+  }
+  var full_round = false;
+  var initial = next_pic;
+  var st = state.images[next_pic].status;
+  while((st == 'seen' && $('#filterseen').prop('checked'))
+     || (st == 'review' && $('#filterreview').prop('checked'))) {
+    next_pic += 1;
+    if(next_pic >= state.images.length) {
+      next_pic = 0;
+    }
+    st = state.images[next_pic].status;
+    if(initial == next_pic)
+      break;
+  }
+  return next_pic;
+}
+function prev_pic_number() {
+  var next_pic = state.current_pic - 1;
+  if(next_pic < 0) { 
+    next_pic = state.images.length - 1;
+  }
+  var full_round = false;
+  var initial = next_pic;
+  var st = state.images[next_pic].status;
+  while((st == 'seen' && $('#filterseen').prop('checked'))
+     || (st == 'review' && $('#filterreview').prop('checked'))) {
+    next_pic -= 1;
+    if(next_pic < 0) { 
+      next_pic = state.images.length - 1;
+    }
+    st = state.images[next_pic].status;
+    if(initial == next_pic)
+      break;
+  }
+  return next_pic;
+}
 
 $(document).on('keyup', function(e) {
   if($('#annot').css('display') == 'none')
@@ -1335,22 +1387,19 @@ $(document).on('keyup', function(e) {
   }
   else if(e.key == " " || e.key == "ArrowRight") {
     if(e.key == " ") {
+      $(':focus').blur()
+    }
+    if(e.key == " ") {
       state.images[state.current_pic].status = 'seen';
     }
-    var next_pic = state.current_pic + 1;
-    if(next_pic >= state.images.length) {
-      next_pic = 0;
-    }
+    var next_pic = next_pic_number();
     if(next_pic != state.current_pic) {
       choosePic(next_pic);
     }
     updatePagination();
   }
   else if(e.key == "ArrowLeft") {
-    var next_pic = state.current_pic - 1;
-    if(next_pic < 0) {
-      next_pic = state.images.length - 1;
-    }
+    var next_pic = prev_pic_number();
     if(next_pic != state.current_pic) {
       choosePic(next_pic);
     }
@@ -1359,21 +1408,20 @@ $(document).on('keyup', function(e) {
 
 function markImg(what) {
   state.images[state.current_pic].status = what;
-  var next_pic = state.current_pic + 1;
-  if(next_pic >= state.images.length) {
-    next_pic = 0;
-  }
+  var next_pic = next_pic_number();
   if(next_pic != state.current_pic) {
-    choosePic(next_pic);
+    choosePic(next_pic);0.6
   }
   updatePagination();
 }
 function markImgBtn(what) {
-  if(this.statistics && what == 'seen') {
-    if(this.statistics == TIP_THRESHHOLD) {
-      fire_tip('Hit [Space] to mark current images as done (<i class="fa-solid fa-eye"></i>) and go to next one.');
+  if(this.statistics) {
+    if(what == 'seen') {
+      if(this.statistics == TIP_THRESHHOLD) {
+        fire_tip('Hit [Space] to mark current images as done (<i class="fa-solid fa-eye"></i>) and go to next one.');
+      }
+      this.statistics += 1;
     }
-    this.statistics += 1;
   }
   else {
     this.statistics = 1;

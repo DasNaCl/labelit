@@ -183,10 +183,29 @@
           <div style="margin:0;">
             <div id="canvasdiv" style="float:left;min-width:80%;overflow:hidden;">
             <canvas style="border: solid 2px white;" id="canvas"></canvas>
-<nav aria-label="Image navigation">
-  <ul id="controlul" class="pagination justify-content-center">
-  </ul>
-</nav>
+
+<div style="margin:0;">
+  <div style="float:left;min-width:20%;padding-left:1em;overflow:hidden;">
+    <div class="form-check form-switch form-check-inline fs-3">
+      <input class="form-check-input" type="checkbox" value="" id="filterreview" onclick="updatePagination()">
+      <label class="form-check-label" for="flexCheckDefault">
+    <i class="fa-solid fa-filter"></i><span class="fa-solid fa-magnifying-glass"></span>
+      </label>
+    </div>
+    <div class="form-check form-switch form-check-inline fs-3">
+      <input class="form-check-input" type="checkbox" value="" id="filterseen" onclick="updatePagination()">
+      <label class="form-check-label" for="flexCheckDefault">
+    <i class="fa-solid fa-filter"></i><span class="fa-solid fa-eye"></span>
+      </label>
+    </div>
+  </div>
+  <div style="float:center;min-width:50%;padding-left:1em;overflow:hidden;">
+    <nav aria-label="Image navigation">
+      <ul id="controlul" class="pagination justify-content-center">
+      </ul>
+    </nav>
+  </div>
+</div>
 <div id="progressdiv" class="progress" style="height:1hm;">
 </div>
             </div>
