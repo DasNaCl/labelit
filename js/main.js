@@ -161,10 +161,11 @@ var state = {
 };
 
 function setBBOXControl(val) {
-  //$('#classdropdown').prop('disabled', !val);
-  $('.combobox').prop('disabled', !val);
-  $('.dropdown-toggle').prop('disabled', !val);
-  $('div.combobox-container input').val('');
+  var classch = $("#classdropdown").prev().children();
+  classch.filter("* > input").prop("disabled", !val).val('');
+  var classchdivch = classch.filter("* > div").children();
+  classchdivch.filter("* > input").prop("disabled", !val).val('');
+  classchdivch.prop('disabled', !val);
 
   $('#age-y').prop('checked', false).parent().toggleClass('disabled', !val);
   $('#age-u').prop('checked', false || !val).parent().toggleClass('disabled', !val);
@@ -185,14 +186,13 @@ function setBBOXControl(val) {
       $('#sex-f').prop('checked', false).parent().toggleClass('disabled', true);
       $('#sex-u').prop('checked', false).parent().toggleClass('disabled', true);
       $('#sex-m').prop('checked', false).parent().toggleClass('disabled', true);
-
-      $('.combobox').prop('disabled', true);
-      $('.dropdown-toggle').prop('disabled', true);
-      $('div.combobox-container input').val('');
       return;
     }
     if(bbox.label != "undefined") {
-      $('div.combobox-container input').val(bbox.label);
+      var classch = $("#classdropdown").prev().children();
+      classch.filter("* > input").prop("disabled", !val).val(bbox.label);
+      var classchdivch = classch.filter("* > div").children();
+      classchdivch.filter("* > input").prop("disabled", !val).val(bbox.label);
       reloadImgStatus();
     }
 
@@ -725,13 +725,13 @@ function choosePic(idx) {
   updateprevbutton(idx);
 
   state.current_pic = idx;
-  reloadImgStatus();
   update_canvas(function() {
     updateViewport();
     applyFilter();
     update_canvas();
     updatePagination();
     displayCSV();
+    reloadImgStatus();
   });
 }
 
@@ -871,6 +871,7 @@ function exportData() {
 }
 
 function updatePagination() {
+  $("#pagenumbertext").val('');
   var ul = $('#controlul');
   ul.html('');
   $("<li class=\"page-item" + (state.current_pic == 0 ? " disabled" : "") +
@@ -943,6 +944,7 @@ function updatePagination() {
       + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
   }
   reloadImgStatus();
+  $('#pagenumbertext').val(state.current_pic + 1);
 }
 
 function requestBreak() {
@@ -956,9 +958,13 @@ function startAnnotation() {
     setTimeout(requestBreak, REQUEST_BRAKE_TIME);
   }
   delete state.spec;
-  $('.combobox').prop('disabled', true);
-  $('.dropdown-toggle').prop('disabled', true);
-  $('div.combobox-container input').val('');
+  $('#pagenumbertext').attr("max", state.images.length);
+
+  var classch = $("#classdropdown").prev().children();
+  classch.filter("* > input").prop("disabled", true).val('');
+  var classchdivch = classch.filter("* > div").children();
+  classchdivch.filter("* > input").prop("disabled", true).val('');
+  classchdivch.prop('disabled', true);
   $('#initial-menu').hide(200, function() {
     updatePagination();
     $('#annot').show(200, function() {
@@ -1325,15 +1331,27 @@ $('#classinput').on('input', function() {
 $('#classinput').trigger("input");
 
 $('#testselect').combobox();
-$('#classdropdown').combobox();
+$('#classdropdown').combobox({
+  template: function () {
+    return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input id="classdropdowninput" type="text" autocomplete="off" />'
+    + '<button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-toggle="dropdown" aria-expandend="false"><span class="visually-hidden">Toggle Dropdownbox</span></button>'
+  },
+});
 $('.combobox').on('change', function(){
   var option = $(this).find('option:selected');
   if($(this).attr('id') == 'classdropdown') {
     updateBBOXInfo({label:option.val()});
-
-    $(':focus').blur()
   }
-})
+  $(':focus').blur()
+});
+
+function setPagination(value) {
+  var val = Math.min(state.images.length - 1, Math.max(0, value));
+  $("#pagenumbertext").val(val+1);
+  if(val != state.current_pic) {
+    choosePic(val);
+  }
+}
 
 function next_pic_number() {
   var next_pic = state.current_pic + 1;
@@ -1388,15 +1406,22 @@ $(document).on('keyup', function(e) {
   else if(e.key == " " || e.key == "ArrowRight") {
     if(e.key == " ") {
       $(':focus').blur()
-    }
-    if(e.key == " ") {
       state.images[state.current_pic].status = 'seen';
     }
-    var next_pic = next_pic_number();
-    if(next_pic != state.current_pic) {
-      choosePic(next_pic);
+    var nothing_undefined = true;
+    for(var i = 0; i < state.boxes.length; ++i) {
+      if(state.boxes[i].label == "undefined") {
+        nothing_undefined = false;
+        break;
+      }
     }
-    updatePagination();
+    if(nothing_undefined) {
+      var next_pic = next_pic_number();
+      if(next_pic != state.current_pic) {
+        choosePic(next_pic);
+      }
+      updatePagination();
+    }
   }
   else if(e.key == "ArrowLeft") {
     var next_pic = prev_pic_number();
