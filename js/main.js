@@ -191,8 +191,10 @@ function setBBOXControl(val) {
       $('div.combobox-container input').val('');
       return;
     }
-    if(bbox.label != "undefined")
+    if(bbox.label != "undefined") {
       $('div.combobox-container input').val(bbox.label);
+      reloadImgStatus();
+    }
 
     if(bbox.attrs.sex == 'female')
       $('#sex-f').prop('checked', true);
@@ -388,6 +390,7 @@ function addbox(desc, dirty = false) {
       });
     }
   });
+  reloadImgStatus();
   if(!dirty) {
     update_canvas(() => {
       canvas.setActiveObject(last);
@@ -449,6 +452,7 @@ function useprev() {
       attrs: prev[i].attrs,
     });
   }
+  $('#prevbutton').prop('disabled', true);
 }
 
 function drawbox() {
@@ -606,6 +610,7 @@ function storebboxes() {
 
     var w = state.images[state.current_pic].width;
     var h = state.images[state.current_pic].height;
+    state.images[state.current_pic].bboxes = state.images[state.current_pic].bboxes === undefined ? [] : state.images[state.current_pic].bboxes;
     state.images[state.current_pic].bboxes.push({
       left: bbox.left / w,
       top: bbox.top / h,
@@ -622,18 +627,27 @@ function storebboxes() {
 function reloadImgStatus() {
   var st = state.images[state.current_pic].status;
 
-  $('#btnunseen').prop('checked', false).css('active', false);
-  $('#btnreview').prop('checked', false).css('active', false);
-  $('#btnseen').prop('checked', false).css('active', false);
+  $('#btnunseen').prop('checked', false);
+  $('#btnreview').prop('checked', false);
+
+  var nothing_undefined = true;
+  for(var i = 0; i < state.boxes.length; ++i) {
+    if(state.boxes[i].label == "undefined") {
+      nothing_undefined = false;
+      break;
+    }
+  }
+  $('#btnseen').prop('checked', false).prop('disabled', !nothing_undefined);
+  console.log(nothing_undefined);
 
   if(st == 'review') {
-    $('#btnreview').prop('checked', true).css('active', true);
+    $('#btnreview').prop('checked', true);
   }
   else if(st == 'seen') {
-    $('#btnseen').prop('checked', true).css('active', true);
+    $('#btnseen').prop('checked', true);
   }
   else {
-    $('#btnunseen').prop('checked', true).css('active', true);
+    $('#btnunseen').prop('checked', true);
   }
 }
 
@@ -929,6 +943,7 @@ function startAnnotation() {
   if($('#tipsenabled').prop('checked')) {
     setTimeout(requestBreak, REQUEST_BRAKE_TIME);
   }
+  delete state.spec;
   $('.combobox').prop('disabled', true);
   $('.dropdown-toggle').prop('disabled', true);
   $('div.combobox-container input').val('');
