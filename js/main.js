@@ -1342,7 +1342,7 @@ $('.combobox').on('change', function(){
   if($(this).attr('id') == 'classdropdown') {
     updateBBOXInfo({label:option.val()});
   }
-  $(':focus').blur()
+  setTimeout(function() { $(':focus').blur() }, 0);
 });
 
 function setPagination(value) {
