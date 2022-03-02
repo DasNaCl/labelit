@@ -698,7 +698,8 @@ function displayCSV() {
   var sex = csvobj.sex.replace(/[Ff]emale/, '<span class="fa-solid fa-venus"></span>')
                       .replace(/[Mm]ale/, '<span class="fa-solid fa-mars"></span>')
                       .replace(/[Uu]ndefined/, '<span class="fa-solid fa-venus-mars"></span>');
-  var age = csvobj.age.replace(/[Aa]dult/, '<span class="fa-solid fa-user-graduate"></span>')
+  var age = csvobj.age.replace(/[Ss]ubadult/, '<span class="fa-solid fa-user-graduate"></span>')
+                      .replace(/[Aa]dult/, '<span class="fa-solid fa-user-graduate"></span>')
                       .replace(/[Jj]uvenile/, '<span class="fa-solid fa-child"></span>')
                       .replace(/[Uu]ndefined/, '<span class="fa-solid fa-question"></span>');
   
@@ -1237,7 +1238,12 @@ function loadcsv(files) {
       var transmogrify = function(array, index) {
         for(var row = 1; row < grid.length; ++row) {
           if(index == csvhelp.filename_idx) {
-            array.push(basename(grid[row][index]));
+            if(grid[row][index]) {
+              array.push(basename(grid[row][index]));
+            }
+            else {
+              array.push("");
+            }
           }
           else if(index == csvhelp.bounding_boxes_idx) {
             var reg = /(\d\.\d*)/g;
@@ -1412,7 +1418,7 @@ $(document).on('keyup', function(e) {
         break;
       }
     }
-    if(nothing_undefined) {
+    if(nothing_undefined || e.key == "ArrowRight") {
       var next_pic = next_pic_number();
       if(next_pic != state.current_pic) {
         choosePic(next_pic);
