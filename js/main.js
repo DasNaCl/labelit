@@ -1407,10 +1407,6 @@ $(document).on('keyup', function(e) {
     }
   }
   else if(e.key == " " || e.key == "ArrowRight") {
-    if(e.key == " ") {
-      $(':focus').blur()
-      state.images[state.current_pic].status = 'seen';
-    }
     var nothing_undefined = true;
     for(var i = 0; i < state.boxes.length; ++i) {
       if(state.boxes[i].label == "undefined") {
@@ -1424,6 +1420,14 @@ $(document).on('keyup', function(e) {
         choosePic(next_pic);
       }
       updatePagination();
+    }
+    else if(!nothing_undefined && e.key == " ") {
+      $(':focus').blur()
+      state.images[state.current_pic].status = 'review';
+    }
+    else if(nothing_undefined && e.key == " ") {
+      $(':focus').blur()
+      state.images[state.current_pic].status = 'seen';
     }
   }
   else if(e.key == "ArrowLeft") {
