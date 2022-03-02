@@ -668,9 +668,6 @@ function addcsvboxes() {
   var imgh = state.images[state.current_pic].height;
   for(var i = 0; i < bboxes.length; ++i) {
     var bbox = bboxes[i];
-
-
-
     addbox({
       left: bbox.left * imgw,
       top: bbox.top * imgh,
@@ -1173,14 +1170,14 @@ function parseCsv(data, fieldSep, newLine) {
     return grid;
 }
 function basename(path) {
-  return path.split(/[\\/]/).pop();
+  return path.split(/[\\/]/).pop().replace(/\.[^/.]+$, "");
 }
 function storeCSV(csvobj) {
   // take care of the metainfo from the csv
   for(var i = 0; i < state.images.length; ++i) {
     var row = undefined;
     for(var j = 0; j < csvobj.filename.length; ++j) {
-      if(csvobj.filename[j] == state.images[i].file.name) {
+      if(state.images[i].file.name.includes(csvobj.filename[j])) {
         row = j; break;
       }
     }
