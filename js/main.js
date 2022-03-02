@@ -1170,7 +1170,7 @@ function parseCsv(data, fieldSep, newLine) {
     return grid;
 }
 function basename(path) {
-  return path.split(/[\\/]/).pop().replace(/\.[^/.]+$, "");
+  return path.split(/[\\/]/).pop().replace(/\.[^/.]+$/, "");
 }
 function storeCSV(csvobj) {
   // take care of the metainfo from the csv
