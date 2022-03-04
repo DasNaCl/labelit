@@ -1234,12 +1234,9 @@ function loadcsv(files) {
           csvhelp.bounding_boxes_idx = i;
         }
       }
-    console.log(grid);
-    console.log(csvhelp);
       var transmogrify = function(array, index) {
         for(var row = 1; row < grid.length; ++row) {
           if(index == csvhelp.filename_idx) {
-            console.log(grid[row][index]);
             array.push(grid[row][index]);
           }
           else if(index == csvhelp.bounding_boxes_idx) {
