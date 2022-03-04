@@ -695,6 +695,8 @@ function displayCSV() {
 
   $('#csvspace').html('');
 
+  csvobj.sex = csvobj.sex ? csvobj.sex : "";
+  csvobj.age = csvobj.age ? csvobj.age : "";
   var sex = csvobj.sex.replace(/[Ff]emale/, '<span class="fa-solid fa-venus"></span>')
                       .replace(/[Mm]ale/, '<span class="fa-solid fa-mars"></span>')
                       .replace(/[Uu]ndefined/, '<span class="fa-solid fa-venus-mars"></span>');
@@ -1170,15 +1172,12 @@ function parseCsv(data, fieldSep, newLine) {
     });
     return grid;
 }
-function basename(path) {
-  return path.split(/[\\/]/).pop().replace(/\.[^/.]+$/, "");
-}
 function storeCSV(csvobj) {
   // take care of the metainfo from the csv
   for(var i = 0; i < state.images.length; ++i) {
     var row = undefined;
     for(var j = 0; j < csvobj.filename.length; ++j) {
-      if(state.images[i].file.name.includes(csvobj.filename[j])) {
+      if(state.images[i].file.name == csvobj.filename[j]) {
         row = j; break;
       }
     }
@@ -1198,7 +1197,7 @@ function loadcsv(files) {
   var reader = new FileReader();
   reader.onload = function(event) {
       var str = event.target.result;
-      var grid = parseCsv(str, ';');
+      var grid = parseCsv(str, ',');
       if(!grid || !grid[0] || !grid[0].length) {
         return;
       }
@@ -1235,15 +1234,13 @@ function loadcsv(files) {
           csvhelp.bounding_boxes_idx = i;
         }
       }
+    console.log(grid);
+    console.log(csvhelp);
       var transmogrify = function(array, index) {
         for(var row = 1; row < grid.length; ++row) {
           if(index == csvhelp.filename_idx) {
-            if(grid[row][index]) {
-              array.push(basename(grid[row][index]));
-            }
-            else {
-              array.push("");
-            }
+            console.log(grid[row][index]);
+            array.push(grid[row][index]);
           }
           else if(index == csvhelp.bounding_boxes_idx) {
             var reg = /(\d\.\d*)/g;
