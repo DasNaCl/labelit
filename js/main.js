@@ -68,6 +68,27 @@ fabric.Object.prototype.controls.hideControl = new fabric.Control({
   cornerSize: 24
 });
 
+var cloneIcon = "data:image/svg+xml;utf8,%3Csvg version='1.1' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m257.44 378.89h62.555v37.114h-62.555z' fill='%23fff' stroke-width='3.4016'/%3E%3Cpath d='m43.685 170.49h247.43v307.35h-247.43z' fill='%23fff' stroke-width='3.4016'/%3E%3Cpath d='m233.09 42.683h234.23v302.51h-234.23z' fill='%23fff' stroke-width='3.4016'/%3E%3Cpath d='m160 128h57.478v57.593h-57.478z' fill='%23fff' stroke-width='3.4016'/%3E%3Cpath d='M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z'/%3E%3C/svg%3E";
+var cloneImg = document.createElement('img');
+cloneImg.src = cloneIcon;
+function rendercloneIcon(ctx, left, top, styleOverride, fabricObject) {
+  var size = this.cornerSize;
+  ctx.save();
+  ctx.translate(left, top);
+  ctx.drawImage(cloneImg, -size/2, -size/2, size, size);
+  ctx.restore();
+}
+fabric.Object.prototype.controls.cloneControl = new fabric.Control({
+  x: -0.5,
+  y: -0.5,
+  offsetY: -16,
+  offsetX: -16,
+  cursorStyle: 'pointer',
+  mouseUpHandler: clonebox,
+  render: rendercloneIcon,
+  cornerSize: 24
+});
+
 function isDark(bgColor) {
   var color = (bgColor.charAt(0) === '#') ? bgColor.substring(1, 7) : bgColor;
   var r = parseInt(color.substring(0, 2), 16); // hexToR
@@ -451,6 +472,18 @@ function deleteboxbyicon(eventData, transform) {
 function hidelabelofbox(eventData, transform) {
   var target = transform.target;
   target.hidelabel = !target.hidelabel;
+}
+function clonebox(eventData, transform) {
+  var target = transform.target;
+  addbox({
+    left: target.left + 10 / canvas.getZoom(),
+    top: target.top + 10 / canvas.getZoom(),
+    width: target.width,
+    height: target.height,
+    conf: target.conf,
+    label: target.label,
+    attrs: target.attrs,
+  });
 }
 function applyFilter() {
   if($('#filtercheckbox').prop('checked')) {
@@ -1442,21 +1475,19 @@ $(document).on('keyup', function(e) {
         break;
       }
     }
-    if(nothing_undefined || e.key == "ArrowRight") {
-      var next_pic = next_pic_number();
-      if(next_pic != state.current_pic) {
-        choosePic(next_pic);
-      }
-      updatePagination();
+    if(nothing_undefined && e.key == " ") {
+      $(':focus').blur()
+      state.images[state.current_pic].status = 'seen';
     }
     else if(!nothing_undefined && e.key == " ") {
       $(':focus').blur()
       state.images[state.current_pic].status = 'review';
     }
-    else if(nothing_undefined && e.key == " ") {
-      $(':focus').blur()
-      state.images[state.current_pic].status = 'seen';
+    var next_pic = next_pic_number();
+    if(next_pic != state.current_pic) {
+      choosePic(next_pic);
     }
+    updatePagination();
   }
   else if(e.key == "ArrowLeft") {
     var next_pic = prev_pic_number();
