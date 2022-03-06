@@ -44,6 +44,30 @@ fabric.Object.prototype.controls.deleteControl = new fabric.Control({
   cornerSize: 24
 });
 
+var hideLabelIcon = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path d="M64 192c27.25 0 51.75-11.5 69.25-29.75c15 54 64 93.75 122.8 93.75c70.75 0 127.1-57.25 127.1-128s-57.25-128-127.1-128c-50.38 0-93.63 29.38-114.5 71.75C124.1 47.75 96 32 64 32c0 33.37 17.12 62.75 43.13 80C81.13 129.3 64 158.6 64 192zM208 96h95.1C321.7 96 336 110.3 336 128h-160C176 110.3 190.3 96 208 96zM337.8 306.9L256 416L174.2 306.9C93.36 321.6 32 392.2 32 477.3c0 19.14 15.52 34.67 34.66 34.67H445.3c19.14 0 34.66-15.52 34.66-34.67C480 392.2 418.6 321.6 337.8 306.9z"/></svg>';
+var hideImg = document.createElement('img');
+hideImg.src = hideLabelIcon;
+function renderHideIcon(ctx, left, top, styleOverride, fabricObject) {
+  var size = this.cornerSize;
+  ctx.save();
+  ctx.translate(left, top);
+  ctx.arc(-0.15*size, -0.1*size, 0.7 * size, 0, 2 * 3.1415926535897, false);
+  ctx.fillStyle = '#FFF';
+  ctx.fill();
+  ctx.drawImage(hideImg, -size/2, -size/2, 0.8 * size, 0.8 * size);
+  ctx.restore();
+}
+fabric.Object.prototype.controls.hideControl = new fabric.Control({
+  x: 0.5,
+  y: 0.25,
+  offsetY: -16,
+  offsetX: 16,
+  cursorStyle: 'pointer',
+  mouseUpHandler: hidelabelofbox,
+  render: renderHideIcon,
+  cornerSize: 24
+});
+
 function isDark(bgColor) {
   var color = (bgColor.charAt(0) === '#') ? bgColor.substring(1, 7) : bgColor;
   var r = parseInt(color.substring(0, 2), 16); // hexToR
@@ -116,6 +140,7 @@ var LabeledRect = fabric.util.createClass(fabric.Rect, {
     this.set('strokeWidth', options.strokeWidth || 2);
     this.set('fill', 'transparent');
     this.set('conf', options.conf || 1.0);
+    this.set('hidelabel', false);
 
     this.updateCol();
 
@@ -139,12 +164,14 @@ var LabeledRect = fabric.util.createClass(fabric.Rect, {
   _render: function(ctx) {
     this.callSuper('_render', ctx);
 
-    ctx.fillStyle = this.stroke;
-    ctx.font = `${this.fontSize}px Verdana`;
-    ctx.fillRect(-this.width/2, -this.height/2 - this.fontSize,
-                 getTextWidth(this.label + ` (${this.conf})`, ctx.font), this.fontSize);
-    ctx.fillStyle = isDark(this.stroke) ? 'white' : 'black';
-    ctx.fillText(this.label + ` (${this.conf})`, -this.width/2, -this.height/2);
+    if(!this.hidelabel) {
+      ctx.fillStyle = this.stroke;
+      ctx.font = `${this.fontSize}px Verdana`;
+      ctx.fillRect(-this.width/2, -this.height/2 - this.fontSize,
+                   getTextWidth(this.label + ` (${this.conf})`, ctx.font), this.fontSize);
+      ctx.fillStyle = isDark(this.stroke) ? 'white' : 'black';
+      ctx.fillText(this.label + ` (${this.conf})`, -this.width/2, -this.height/2);
+    }
   }
 });
 
@@ -421,6 +448,10 @@ function deleteboxbyicon(eventData, transform) {
   }
   return deletebox(eventData, transform);
 }
+function hidelabelofbox(eventData, transform) {
+  var target = transform.target;
+  target.hidelabel = !target.hidelabel;
+}
 function applyFilter() {
   if($('#filtercheckbox').prop('checked')) {
     var todel = [];
@@ -600,6 +631,9 @@ canvas.on('object:modified', function(e) {
   });
 canvas.on('selection:cleared', function(e) {
     setBBOXControl(false);
+    for(var i = 0; i < state.boxes.length; ++i) {
+      state.boxes[i].hidelabel = false;
+    }
 });
 }
 
