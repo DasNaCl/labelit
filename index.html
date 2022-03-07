@@ -126,6 +126,7 @@
 
         <div id="annot" style="display:none;">
           <div style="text-align:center;">
+            <button id="undo" class="btn btn-success" type="button" onclick="undo()" disabled><i class="fa-solid fa-rotate-left"></i></button>
             <!-- Sex -->
             <div class="btn-group colors" data-toggle="buttons">
               <label class="btn btn-info disabled">
@@ -161,7 +162,7 @@
           </button>
           <button class="btn btn-success" onclick="update_canvas_btn()" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this if something is weird"><span class="fa-solid fa-rotate"></span></button>
           <button class="btn btn-success" onclick="drawbox()" data-bs-toggle="tooltip" data-bs-placement="top" title="Draw a bounding box"><i class="fa-solid fa-pen"></i></button>
-          <button disabled id="prevbutton" class="btn btn-success" onclick="useprev()" data-bs-toggle="tooltip" data-bs-placement="top" title="Clone from the previous one, like bacteria."><i class="fa-solid fa-bacteria"></i></button>
+          <button disabled id="prevbutton" class="btn btn-success" onclick="useprev()" ><i class="fa-solid fa-bacteria"></i></button>
 &nbsp;&nbsp;&nbsp;
           <span class="p-6">&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <!-- Image seen/Unseen -->
@@ -174,7 +175,7 @@
           <div class="btn-group colors">
             <input type="number" class="form-control w-50" id="filternumber" aria-describedby="numberHelp" min="0" max="1.0" value="0.6" step="0.05" oninput="applyFilter()" data-bs-toggle="tooltip" data-bs-placement="top" title="Any confidence less than this value may be filtered.">
             <div class="btn-group-toggle" data-toggle="buttons">
-              <label class="btn btn-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Automatically filter Bounding Boxes with low confidence."><input id="filtercheckbox" type="checkbox" autocomplete="off" onclick="applyFilter()" ><i class="fa-solid fa-filter"></i></label>
+              <label class="btn btn-info"><input id="filtercheckbox" type="checkbox" autocomplete="off" onclick="applyFilter()" ><i class="fa-solid fa-filter"></i></label>
             </div>
           </div>
           <button class="btn btn-info" onclick="exportData()" data-bs-toggle="tooltip" data-bs-placement="top" title="Export COCO data"><i class="fa-solid fa-file-export"></i></button>

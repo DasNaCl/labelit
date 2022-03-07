@@ -206,7 +206,31 @@ var state = {
   pic_in_spec: {},
   xcross: null,
   max_zoom: 0.1,
+  undo_buffer: [],
 };
+
+function clear_undos() {
+  state.undo_buffer = [];
+
+  $("#undo").prop('disabled', true);
+}
+
+function push_undo(fn) {
+  state.undo_buffer.push(fn);
+
+  $("#undo").prop('disabled', false);
+}
+
+function undo() {
+  if(state.undo_buffer.length == 0)
+    return;
+  var fn = state.undo_buffer.pop();
+  fn();
+
+  if(state.undo_buffer.length == 0) {
+    $("#undo").prop('disabled', true);
+  }
+}
 
 function setBBOXControl(val) {
   var classch = $("#classdropdown").prev().children();
@@ -265,6 +289,20 @@ function updateBBOXInfo(what) {
   var bbox = canvas.getActiveObject();
   if(bbox == null)
     return;
+
+  var old = { label: bbox.label, sex: bbox.attrs.sex, age: bbox.attrs.age };
+  if(bbox.label != what.label || bbox.attrs.sex != what.sex || bbox.attrs.age != what.age) {
+    push_undo(() => {
+      if(bbox.label != old.label) {
+        bbox.label = old.label;
+        bbox.updateCol();
+        canvas.requestRenderAll();
+      }
+      bbox.attrs.sex = old.sex;
+      bbox.attrs.age = old.age;
+      setBBOXControl(true);
+    });
+  }
 
   var old_conf = bbox.conf;
   // always set confidence to 1.0 if any property is changed by the user
@@ -467,6 +505,7 @@ function deleteboxbyicon(eventData, transform) {
   else {
     this.statistics = 1;
   }
+  push_undo(() => { addbox(transform.target); });
   return deletebox(eventData, transform);
 }
 function hidelabelofbox(eventData, transform) {
@@ -484,6 +523,8 @@ function clonebox(eventData, transform) {
     label: target.label,
     attrs: target.attrs,
   });
+  var box = state.boxes[state.boxes.length - 1];
+  push_undo(() => { deletebox(null, {target:box}); });
 }
 function applyFilter() {
   if($('#filtercheckbox').prop('checked')) {
@@ -494,6 +535,12 @@ function applyFilter() {
         todel.push(bbox);
       }
     }
+    push_undo(() => {
+      $('#filtercheckbox').prop('checked', false);
+      for(var i = 0; i < todel.length; ++i) {
+        addbox(todel[i]);
+      }
+    });
     for(var i = 0; i < todel.length; ++i) {
       deletebox(undefined, {target: todel[i]});
     }
@@ -505,6 +552,7 @@ function useprev() {
   var prev = state.images[prevpic].bboxes;
   var imgw = state.images[prevpic].width;
   var imgh = state.images[prevpic].height;
+  var boxes = [];
   for(var i = 0; i < prev.length; ++i) {
     addbox({
       left: prev[i].left * imgw,
@@ -515,8 +563,16 @@ function useprev() {
       label: prev[i].label,
       attrs: prev[i].attrs,
     });
+    boxes.push(state.boxes[state.boxes.length - 1]);
   }
   $('#prevbutton').prop('disabled', true);
+
+  push_undo(() => {
+    for(var i = 0; i < prev.length; ++i) {
+      deletebox(null, {target:boxes[i]});
+    }
+    $('#prevbutton').prop('disabled', false);
+  });
 }
 
 function drawbox() {
@@ -642,6 +698,8 @@ canvas.on('mouse:up', function(e) {
             label: "undefined",
             attrs: { sex: "undefined", age: "undefined" },
           });
+          var box = state.boxes[state.boxes.length-1];
+          push_undo(() => { deletebox(null, {target: box}); });
         }
         state.xcross = null;
         update_canvas(() => canvas.setActiveObject(state.boxes[state.boxes.length-1]));
@@ -653,13 +711,25 @@ canvas.on('mouse:up', function(e) {
       e.target.opacity = 1.0;
       e.target.conf = 1.0;
       e.target.dirty = true;
+      if(this.movedBox === true) {
+        push_undo(() => {
+          console.log(e);
+          e.target.set({
+            left: e.transform.original.left,
+            top: e.transform.original.top,
+          });
+          canvas.requestRenderAll();
+        });
+        this.movedBox = false;
+      }
       this.requestRenderAll();
     }
   });
-canvas.on('object:moved', function(e) {
+canvas.on('object:moving', function(e) {
     e.target.opacity = 0.5;
+    this.movedBox = true;
   });
-canvas.on('object:modified', function(e) {
+canvas.on('object:moved', function(e) {
     e.target.opacity = 1;
   });
 canvas.on('selection:cleared', function(e) {
@@ -1464,6 +1534,7 @@ $(document).on('keyup', function(e) {
   if(e.key == "Delete" || e.key == "Backspace" || e.key == "x") {
     var bbox = canvas.getActiveObject();
     if(bbox && bbox.conf) {
+      push_undo(() => { addbox(bbox); });
       deletebox(undefined, {target: bbox});
     }
   }
@@ -1477,14 +1548,31 @@ $(document).on('keyup', function(e) {
     }
     if(nothing_undefined && e.key == " ") {
       $(':focus').blur()
+      var old_status = state.images[state.current_pic].status;
+      var img = state.images[state.current_pic];
+      push_undo(() => {
+        img.status = old_status;
+        reloadImgStatus();
+        updatePagination();
+      });
+
       state.images[state.current_pic].status = 'seen';
     }
     else if(!nothing_undefined && e.key == " ") {
       $(':focus').blur()
+      var old_status = state.images[state.current_pic].status;
+      var img = state.images[state.current_pic];
+      push_undo(() => {
+        img.status = old_status;
+        reloadImgStatus();
+        updatePagination();
+      });
+
       state.images[state.current_pic].status = 'review';
     }
     var next_pic = next_pic_number();
     if(next_pic != state.current_pic) {
+      clear_undos();
       choosePic(next_pic);
     }
     updatePagination();
@@ -1492,6 +1580,7 @@ $(document).on('keyup', function(e) {
   else if(e.key == "ArrowLeft") {
     var next_pic = prev_pic_number();
     if(next_pic != state.current_pic) {
+      clear_undos();
       choosePic(next_pic);
     }
   }
@@ -1501,7 +1590,8 @@ function markImg(what) {
   state.images[state.current_pic].status = what;
   var next_pic = next_pic_number();
   if(next_pic != state.current_pic) {
-    choosePic(next_pic);0.6
+    clear_undos();
+    choosePic(next_pic);
   }
   updatePagination();
 }
@@ -1517,6 +1607,13 @@ function markImgBtn(what) {
   else {
     this.statistics = 1;
   }
+  var img = state.images[state.current_pic];
+  var old_status = img.status;
+  push_undo(() => {
+    img.status = old_status;
+    reloadImgStatus();
+    updatePagination();
+  });
   return markImg(what);
 }
 
