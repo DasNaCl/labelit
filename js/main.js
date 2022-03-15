@@ -875,7 +875,7 @@ function choosePic(idx) {
 function downloadObjectAsJson(exportObj, exportName){
   var downloadAnchorNode = document.createElement('a');
 
-  var file = new Blob([JSON.stringify(exportObj)], {type:'application/json;charset=utf-8'});
+  var file = new Blob([JSON.stringify(exportObj, null, "  ")], {type:'application/json;charset=utf-8'});
 
   var url = (window.URL || window.webkitURL).createObjectURL(file);
   downloadAnchorNode.setAttribute("href",     url);
@@ -980,8 +980,8 @@ function exportData() {
       }
       console.log("Some images have boxes with label \"undefined\":\n" + str
           + "\nNote: this is expected if you want to continue later on where you left off.");
-      $('#error-toast-body').text("Some images were not present in the JSON. Check them out by [RightClick] -> Inspect and then read what is written on the console.");
-      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+      $('#tip-toast-body').text("Some Images have undefined labels.");
+      bootstrap.Toast.getInstance(document.getElementById('tip-toast')).show(100);
     }
     downloadObjectAsJson(coco, date.toISOString().slice(0,10).replace(/-/g,"") + "_coco");
   }
