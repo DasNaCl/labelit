@@ -1,6 +1,6 @@
 
 const TIP_THRESHHOLD = 4;
-const REQUEST_BRAKE_TIME = 90 * 60 * 1000;
+const REQUEST_BRAKE_TIME = 30 * 60 * 1000;
 
 const MIN_BBOX_AREA = 10 * 10;
 
@@ -1085,7 +1085,7 @@ function updatePagination() {
 }
 
 function requestBreak() {
-  fire_tip('You\'ve been labeling for about an hour. Consider taking a break.');
+  fire_tip('You\'ve been labeling for about half an hour. Consider taking a break and <b>save your progress!</b>.');
   setTimeout(requestBreak, REQUEST_BRAKE_TIME);
 }
 
