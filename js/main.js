@@ -865,6 +865,20 @@ function addcsvinfo() {
 
   $('#csvaddinfobutton').prop("disabled", true).val('');
 }
+var markedemptyasseen = false;
+function csvmarkemptyasseen() {
+  if(!hasCsv)
+    return;
+  for(var i = 0; i < state.images.length; ++i) {
+    var csv = state.images[i].csvobj;
+    if(csv.species_common_name == '') {
+      state.images[i].status = 'seen';
+    }
+  }
+  updatePagination();
+  markedemptyasseen = true;
+  $('#csvmarkempty').hide(200);
+}
 function displayCSV() {
   if(!hasCsv)
     return;
@@ -895,6 +909,10 @@ function displayCSV() {
     $('#csvspace').append('<h5 class="text-justify">No bounding boxes.</h5>');
   }
   $('#csvspace').append('<button id="csvaddinfobutton" style="margin-top:2%" class="btn btn-success" disabled onclick="addcsvinfo()">Re-Use</button>');
+
+  if(!markedemptyasseen) {
+    $('#csvspace').append('<br/><button id="csvmarkempty" style="margin-top:4%" class="btn btn-info" onclick="csvmarkemptyasseen()">Empty -> <span class="fa-solid fa-eye-slash"></span></button>');
+  }
 }
 
 // "gameloop"
