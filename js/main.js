@@ -713,7 +713,6 @@ canvas.on('mouse:up', function(e) {
       e.target.dirty = true;
       if(this.movedBox === true) {
         push_undo(() => {
-          console.log(e);
           e.target.set({
             left: e.transform.original.left,
             top: e.transform.original.top,
@@ -737,6 +736,13 @@ canvas.on('selection:cleared', function(e) {
     for(var i = 0; i < state.boxes.length; ++i) {
       state.boxes[i].hidelabel = false;
     }
+    $('#csvaddinfobutton').prop('disabled', true);
+});
+canvas.on('selection:created', function(e) {
+    $('#csvaddinfobutton').prop('disabled', false);
+});
+canvas.on('selection:updated', function(e) {
+    $('#csvaddinfobutton').prop('disabled', false);
 });
 }
 
@@ -825,6 +831,40 @@ function addcsvboxes() {
     $('#csvspace').append('<h5 class="text-justify">No bounding boxes.</h5>');
   });
 }
+function addcsvinfo() {
+  if(!hasCsv)
+    return;
+  var csvobj = state.images[state.current_pic].csvobj;
+
+  var bbox = canvas.getActiveObject();
+  if(bbox.attrs === undefined)
+    return;
+  var label = csvobj.species_common_name || "undefined";
+  // csv might only contain a substring of the whole class name, so we fix that
+  var classes = $('#classinput').val().split(';');
+  var found = "";
+  for(var e in classes) {
+    var cl = classes[e];
+    if(cl.includes(label)) {
+      found = cl;
+      break;
+    }
+  }
+  bbox.label = found;
+
+  if(csvobj.sex !== undefined && csvobj.sex != "") {
+    bbox.attrs.sex = (csvobj.sex.split(',')[0] || "undefined").trim().toLowerCase();
+  }
+  if(csvobj.age !== undefined && csvobj.age != "") {
+    bbox.attrs.age = (csvobj.age.split(',')[0] || "undefined").trim().toLowerCase();
+  }
+  bbox.dirty = true;
+  canvas.requestRenderAll();
+  setBBOXControl(true);
+  bbox.updateCol();
+
+  $('#csvaddinfobutton').prop("disabled", true).val('');
+}
 function displayCSV() {
   if(!hasCsv)
     return;
@@ -854,6 +894,7 @@ function displayCSV() {
   else {
     $('#csvspace').append('<h5 class="text-justify">No bounding boxes.</h5>');
   }
+  $('#csvspace').append('<button id="csvaddinfobutton" style="margin-top:2%" class="btn btn-success" disabled onclick="addcsvinfo()">Re-Use</button>');
 }
 
 // "gameloop"
