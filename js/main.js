@@ -932,17 +932,34 @@ function choosePic(idx) {
 }
 
 function downloadObjectAsJson(exportObj, exportName){
-  var downloadAnchorNode = document.createElement('a');
+  if(window.showSaveFilePicker) {
+    // we may use the new API that allows us to open a file dialog regardless of the browser's settings
+    try {
+      (async () => {
+        var saveFile = await window.showSaveFilePicker({
+            suggestedName: exportName + ".json"
+        });
+        const writable = await saveFile.createWritable();
+        await writable.write(JSON.stringify(exportObj, null, '  '));
+        await writable.close();
+      })();
+    } catch(e) {
+      console.log(e);
+    }
+  }
+  else {
+    var downloadAnchorNode = document.createElement('a');
 
-  var file = new Blob([JSON.stringify(exportObj, null, "  ")], {type:'application/json;charset=utf-8'});
+    var file = new Blob([JSON.stringify(exportObj, null, "  ")], {type:'application/json;charset=utf-8'});
 
-  var url = (window.URL || window.webkitURL).createObjectURL(file);
-  downloadAnchorNode.setAttribute("href",     url);
-  downloadAnchorNode.setAttribute("download", exportName + ".json");
-  document.body.appendChild(downloadAnchorNode); // required for firefox
-  downloadAnchorNode.click();
-  downloadAnchorNode.remove();
-  (window.URL || window.webkitURL).revokeObjectURL(url);
+    var url = (window.URL || window.webkitURL).createObjectURL(file);
+    downloadAnchorNode.setAttribute("href",     url);
+    downloadAnchorNode.setAttribute("download", exportName + ".json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    (window.URL || window.webkitURL).revokeObjectURL(url);
+  }
 }
 
 // this function prepares the state.images.bboxes stuff as such that we have the COCO format as download
