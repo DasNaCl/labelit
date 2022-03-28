@@ -871,7 +871,7 @@ function csvmarkemptyasseen() {
     return;
   for(var i = 0; i < state.images.length; ++i) {
     var csv = state.images[i].csvobj;
-    if(csv.species_common_name == '') {
+    if(csv.species_common_name == '' || csv.species_common_name == 'No Species') {
       state.images[i].status = 'seen';
     }
   }
