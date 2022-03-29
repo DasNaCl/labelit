@@ -932,7 +932,7 @@ function choosePic(idx) {
 }
 
 function downloadObjectAsJson(exportObj, exportName){
-  if(window.showSaveFilePicker) {
+  if(false && window.showSaveFilePicker) {
     // we may use the new API that allows us to open a file dialog regardless of the browser's settings
     try {
       (async () => {
