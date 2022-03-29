@@ -1,0 +1,75 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/bootstrap-combobox.css">
+        <style>
+            body {
+                padding-top: 50px;
+                padding-bottom: 20px;
+            }
+        </style>
+        <link rel="stylesheet" href="/css/main.css">
+
+        <script src="/js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+        <script defer src="/js/vendor/fontawesome-all.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+        <p>Select <b>all</b> COCO-JSON files you want to merge: </p><div id="loadfiles"><input class="btn btn-primary btn-lg" type="file" onchange="readfiles(this.files)" multiple="" />&nbsp;&nbsp;<i id="filecheckmark" class="fa-solid fa-check fa-2xl" style="color:green;display:none;"></i></div>
+      </div>
+      <div class="container">
+        <p>Click here to download. (button will enable as soon as merge is complete)
+        <button id="downloadbut" class="btn btn-success btn-lg" onclick="download()" disabled>Download</button>
+      </div>
+      <div class="container" style="margin-top:5em">
+        <p>Merging works as follows:</p>
+        <ul>
+          <li>We read all JSONS.</li>
+          <li>For all attributes, we choose the superset.</li>
+          <li>Bounding boxes are considered equal if their area matches within 25 pixels and the (left,top) coordinates are within a radius of 5 pixels.</li>
+          <li>If bounding boxes are considered equal, we choose the one with higher confidence.</li>
+          <li>If confidences are equal, both need to have the same species and attributes, however, if any of those is marked <code>undefined</code>, we choose the one that isn't marked as such.</li>
+          <li>In the unlikely and unlucky case that e.g. everything is equal up to the age, so for same box in two files it's <code>male</code> and <code>female</code>, respectively, we'll mark the field as "<code>undefined</code>" and set the status of the image to "<code>review</code>".</li>
+          <li>The image's status can be either <code>seen</code>, <code>unseen</code>, or <code>review</code>.</li>
+          <li>We'll use the "highest" according to the preorder <code>seen</code>&gt;<code>review</code>&gt;<code>unseen</code>.</li>
+        </ul>
+
+        <b>Assumptions:</b><br>
+        <ul>
+          <li>
+            For each image, the field <code>file_name</code> contains the file name, not the path.
+          Henceforth, file names should be unique.
+          </li>
+          <li>
+            All objects in the JSON are sorted ascendingly with respect to their ID.
+          </li>
+        </ul>
+      </div>
+    </div>
+    </div> <!-- /container -->
+        <script>document.write('<script src="/js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
+        <!--<script src="js/vendor/popper.min.js"></script>-->
+        <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+        <script src="/js/vendor/fabric.min.js"></script>
+        <script src="/js/vendor/bootstrap-combobox.js"></script>
+
+        <script src="/js/merge/main.js"></script>
+    </body>
+</html>
