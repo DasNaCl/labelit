@@ -911,7 +911,7 @@ function displayCSV() {
   $('#csvspace').append('<button id="csvaddinfobutton" style="margin-top:2%" class="btn btn-success" disabled onclick="addcsvinfo()">Re-Use</button>');
 
   if(!markedemptyasseen) {
-    $('#csvspace').append('<br/><button id="csvmarkempty" style="margin-top:4%" class="btn btn-info" onclick="csvmarkemptyasseen()">Empty -> <span class="fa-solid fa-eye-slash"></span></button>');
+    $('#csvspace').append('<br/><button id="csvmarkempty" style="margin-top:4%" class="btn btn-info" onclick="csvmarkemptyasseen()">Empty -&gt; <span class="fa-solid fa-eye-slash"></span></button>');
   }
 }
 
