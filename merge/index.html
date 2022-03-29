@@ -46,7 +46,7 @@
           <li>Bounding boxes are considered equal if their area matches within 25 pixels and the (left,top) coordinates are within a radius of 5 pixels.</li>
           <li>If bounding boxes are considered equal, we choose the one with higher confidence.</li>
           <li>If confidences are equal, both need to have the same species and attributes, however, if any of those is marked <code>undefined</code>, we choose the one that isn't marked as such.</li>
-          <li>In the unlikely and unlucky case that e.g. everything is equal up to the age, so for same box in two files it's <code>male</code> and <code>female</code>, respectively, we'll mark the field as "<code>undefined</code>" and set the status of the image to "<code>review</code>".</li>
+          <li>In the unlikely and unlucky case that e.g. everything is equal up to the sex, so for same box in two files it's <code>male</code> and <code>female</code>, respectively, we'll mark the field as "<code>undefined</code>" and set the status of the image to "<code>review</code>".</li>
           <li>The image's status can be either <code>seen</code>, <code>unseen</code>, or <code>review</code>.</li>
           <li>We'll use the "highest" according to the preorder <code>seen</code>&gt;<code>review</code>&gt;<code>unseen</code>.</li>
         </ul>
