@@ -1,4 +1,5 @@
 
+const date = new Date();
 const TIP_THRESHHOLD = 4;
 const REQUEST_BRAKE_TIME = 30 * 60 * 1000;
 
@@ -962,11 +963,9 @@ function downloadObjectAsJson(exportObj, exportName){
   }
 }
 
-// this function prepares the state.images.bboxes stuff as such that we have the COCO format as download
-function exportData() {
+function buildExportData(TLcallback) {
   var coco = {};
 
-  var date = new Date();
   coco.info = {
     year: date.getFullYear(),
     version: "1",
@@ -1059,9 +1058,16 @@ function exportData() {
       $('#tip-toast-body').text("Some Images have undefined labels.");
       bootstrap.Toast.getInstance(document.getElementById('tip-toast')).show(100);
     }
-    downloadObjectAsJson(coco, date.toISOString().slice(0,10).replace(/-/g,"") + "_coco");
+    updateExportProgress(state.images.length + 1);
+    if(TLcallback) {
+      TLcallback(coco);
+    }
+    else {
+      downloadObjectAsJson(coco, date.toISOString().slice(0,10).replace(/-/g,"") + "_coco");
+    }
   }
   var store_pic = function(jdx, callback) {
+    updateExportProgress(jdx);
     if(jdx >= state.images.length)
       return callback();
     var src = (window.URL || window.webkitURL).createObjectURL(state.images[jdx].file);
@@ -1081,6 +1087,23 @@ function exportData() {
     });
   };
   store_pic(0, handle_annotations);
+}
+function updateExportProgress(idx) {
+  var isShown = $('#exportProgress').hasClass('in') || $('#exportProgress').hasClass('show')
+  if(!isShown) {
+    $('#exportProgress').modal('show');
+  }
+
+  var progress = 100 * (idx / (state.images.length + 1));
+  $('#exportProgressBar').html('');
+  $('#exportProgressBar').append("<div class=\"progress-bar bg-success\" role=\"progressbar\" "
+        + "style=\"width: " + progress + "%\" aria-valuenow=\"" + progress
+        + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
+}
+
+// this function prepares the state.images.bboxes stuff as such that we have the COCO format as download
+function exportData() {
+  buildExportData((coco) => downloadObjectAsJson(coco, date.toISOString().slice(0,10).replace(/-/g,"") + "_coco"));
 }
 
 function updatePagination() {
