@@ -963,6 +963,19 @@ function downloadObjectAsJson(exportObj, exportName){
   }
 }
 
+function getImageSize(img, callback) {
+  var $img = $(img);
+
+  var wait = setInterval(function() {
+    var w = $img[0].naturalWidth,
+        h = $img[0].naturalHeight;
+    if (w && h) {
+        clearInterval(wait);
+        callback.apply(this, [w, h]);
+    }
+  }, 1);
+}
+
 function buildExportData(TLcallback) {
   var coco = {};
 
@@ -1070,21 +1083,37 @@ function buildExportData(TLcallback) {
     updateExportProgress(jdx);
     if(jdx >= state.images.length)
       return callback();
-    var src = (window.URL || window.webkitURL).createObjectURL(state.images[jdx].file);
-    fabric.Image.fromURL(src, (oImg) => {
+    if(state.images[jdx].width === undefined || state.images[jdx].height === undefined) {
+      var src = (window.URL || window.webkitURL).createObjectURL(state.images[jdx].file);
+      var imgNode = document.createElement('img');
+      imgNode.setAttribute('src', src);
+      getImageSize(imgNode, function(w,h) {
+        state.images[jdx].width = w;
+        state.images[jdx].height = h;
+        coco.images.push({
+          id: jdx,
+          license: 1,
+          file_name: state.images[jdx].file.name,
+          height: h,
+          width: w,
+          status: state.images[jdx].status,
+        });
+        imgNode.remove();
+        (window.URL || window.webkitURL).revokeObjectURL(src);
+        store_pic(jdx + 1, callback);
+      });
+    }
+    else {
       coco.images.push({
         id: jdx,
         license: 1,
         file_name: state.images[jdx].file.name,
-        height: oImg.height,
-        width: oImg.width,
+        height: state.images[jdx].height,
+        width: state.images[jdx].width,
         status: state.images[jdx].status,
       });
-      state.images[jdx].width = oImg.width;
-      state.images[jdx].height = oImg.height;
-      (window.URL || window.webkitURL).revokeObjectURL(src);
       store_pic(jdx + 1, callback);
-    });
+    }
   };
   store_pic(0, handle_annotations);
 }
@@ -1093,12 +1122,16 @@ function updateExportProgress(idx) {
   if(!isShown) {
     $('#exportProgress').modal('show');
   }
+  var max = state.images.length + 1;
 
-  var progress = 100 * (idx / (state.images.length + 1));
+  var progress = 100 * (idx / max);
   $('#exportProgressBar').html('');
   $('#exportProgressBar').append("<div class=\"progress-bar bg-success\" role=\"progressbar\" "
         + "style=\"width: " + progress + "%\" aria-valuenow=\"" + progress
         + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
+  if(idx >= max) {
+    $('#exportProgress').modal('hide');
+  }
 }
 
 // this function prepares the state.images.bboxes stuff as such that we have the COCO format as download
