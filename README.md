@@ -1,6 +1,9 @@
 
 # LabelIt
 
+Click [here](https://use-labelit.com/) to try! (any images you "upload" stay on your machine, nothing is really uploaded)
+
+
 This is a fairly basic tool to label object detection datasets.
 Despite running in a webbrowser, the app works entirely local.
 Do note that things might break, it's not well-tested yet. Please let me know if you find issues or have suggestions for improvement.
