@@ -1032,6 +1032,7 @@ function buildExportData(TLcallback) {
             undefined_imgs["\"" + state.images[i].file.name + "\"\n"] = true;
             hasundef = true;
           }
+          ++bboxid;
         }
       }
       else {
@@ -1056,10 +1057,10 @@ function buildExportData(TLcallback) {
               undefined_imgs["\"" + state.images[i].file.name + "\"\n"] = true;
               hasundef = true;
             }
+            ++bboxid;
           }
         }
       }
-      ++bboxid;
     }
     if(hasundef) {
       var str = "";
