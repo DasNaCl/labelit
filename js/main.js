@@ -1327,6 +1327,7 @@ function mayEnableAnnotButton() {
     }
     for(var j = 0; j < state.images.length; ++j) {
       var img = state.images[j].file;
+      console.log("Loaded Image Name: \"" + img + "\"");
       var bboxes = [];
       for(var i = 0; i < state.spec.annotations.length; ++i) {
         var annot = state.spec.annotations[i];
@@ -1345,6 +1346,10 @@ function mayEnableAnnotButton() {
         }
       }
       state.images[j].bboxes = bboxes;
+    }
+    // debug print all json names
+    for(var e in imgid2img) {
+      console.log("Json Image Name: \"" + imgid2img[e] + "\"");
     }
   }
   else {
