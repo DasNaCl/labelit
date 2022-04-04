@@ -1347,7 +1347,7 @@ function mayEnableAnnotButton() {
       }
       state.images[j].bboxes = bboxes;
     }
-    // debug print all json names
+    // Debug debug print all json names
     for(var e in imgid2img) {
       console.log("Json Image Name: \"" + imgid2img[e] + "\"");
     }
