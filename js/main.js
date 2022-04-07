@@ -1236,6 +1236,23 @@ function startAnnotation() {
   classchdivch.filter("* > input").prop("disabled", true).val('');
   classchdivch.prop('disabled', true);
   $('#initial-menu').hide(200, function() {
+    if($('#filtermdcheckbox').prop('checked')) {
+      // delete shitty boxes
+      for(var i = 0; i < state.images.length; ++i) {
+        var tokeep = [];
+        for(var j = 0; j < state.images[i].bboxes.length; ++j) {
+          var bbox = state.images[i].bboxes[j];
+          if(bbox.conf >= $('#mdfilternumber').val()) {
+            tokeep.push(bbox);
+          }
+        }
+        state.images[i].bboxes = tokeep;
+        if(state.images[i].bboxes.length == 0) {
+          state.images[i].status = 'seen';
+        }
+      }
+    }
+
     updatePagination();
     $('#annot').show(200, function() {
       var w = window.innerWidth * 0.8;
@@ -1250,7 +1267,6 @@ function startAnnotation() {
       });
       canvasevents();
       choosePic(0);
-
       $('#success-toast-body').text("Happy Annotating! :^)");
       bootstrap.Toast.getInstance(document.getElementById('success-toast')).show(100);
     });

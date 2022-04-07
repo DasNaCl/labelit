@@ -139,6 +139,13 @@
               <label class="form-check-label" for="nojsoncheck">None</label>
             </div>
             <input disabled id="jsonbutton" class="btn btn-primary btn-lg" type="file" onchange="loadjson(this.files)" />&nbsp;&nbsp;<i id="jsoncheckmark" class="fa-solid fa-check fa-2xl" style="color:green;display:none;"></i>
+          <div class="btn-group colors">
+            <input type="number" class="form-control w-50" id="mdfilternumber" aria-describedby="numberHelp" min="0" max="1.0" value="0.6" step="0.05" oninput="applyFilter()" data-bs-toggle="tooltip" data-bs-placement="top" title="Any confidence less than this value may be filtered.">
+            <div class="btn-group-toggle" data-toggle="buttons">
+              <label class="btn btn-info"><input id="filtermdcheckbox" type="checkbox" autocomplete="off"><i class="fa-solid fa-filter"></i></label>
+            </div>
+          </div>
+              (mark "empty" md images as seen)
           </div>
           </br>
           <h1>Modify classes, if necessary.</h1>
