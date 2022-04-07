@@ -356,5 +356,7 @@ function downloadObjectAsJson(exportObj, exportName){
     downloadAnchorNode.remove();
     (window.URL || window.webkitURL).revokeObjectURL(url);
   }
+
+  $("body").html('<h1>Refresh the page if you want to merge something else.</h1>');
 }
 
