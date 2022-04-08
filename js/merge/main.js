@@ -61,11 +61,11 @@ var state = {
     description: "Merged using LabelIt",
     date_created: date.toISOString(),
   },
-  license: {
+  licenses: [{
     id: 1,
     url: "https://creativecommons.org/publicdomain/zero/1.0/",
     name: "Public Domain"
-  },
+  }},
   categories: [],
   images: [],
   annotations: [],

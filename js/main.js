@@ -985,11 +985,11 @@ function buildExportData(TLcallback) {
     description: "Exported using LabelIt",
     date_created: date.toISOString(),
   };
-  coco.license = {
+  coco.licenses = [{
     "id": 1,
     "url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "name": "Public Domain"
-  };
+  }};
   coco.categories = [];
   var idx = 0;
   var label2id = [];
