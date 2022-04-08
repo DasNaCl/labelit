@@ -989,7 +989,7 @@ function buildExportData(TLcallback) {
     "id": 1,
     "url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "name": "Public Domain"
-  }};
+  }];
   coco.categories = [];
   var idx = 0;
   var label2id = [];
