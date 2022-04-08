@@ -1344,6 +1344,7 @@ function mayEnableAnnotButton() {
     }
     for(var j = 0; j < state.images.length; ++j) {
       var img = state.images[j].file;
+      console.log("Loaded Image Name: \"" + img.name + "\"");
       var bboxes = [];
       for(var i = 0; i < state.spec.annotations.length; ++i) {
         var annot = state.spec.annotations[i];

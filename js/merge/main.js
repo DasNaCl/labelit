@@ -105,11 +105,15 @@ function mergeboxes() {
     var json = state.jsons[e];
     var innerboxes = [];
     for(var i in json.annotations) {
-      var box = json.annotations[i];
-      var img = json.images[box.image_id];
+      var box = JSON.parse(JSON.stringify(json.annotations[i]));
+      var img = findimg(json,box.image_id);
+      if(img == undefined) {
+        console.log(box);
+        console.log(json.images);
+      }
       box.image_id = findimgid(img);
       if(box.category_id !== undefined) {
-        var cat = json.categories[box.category_id];
+        var cat = findcat(json,box.category_id);
         box.category_id = findcatid(cat);
       }
       innerboxes.push(box);
@@ -120,9 +124,9 @@ function mergeboxes() {
         var box = boxes[e];
         // what we want to do is the following:
         //  1) get image name of box "v"
-        var eimgname = state.images[v.image_id].file_name;
+        var eimgname = findimg(state,v.image_id).file_name;
         //  2) get image name of box "box"
-        var boximgname = state.images[box.image_id].file_name;
+        var boximgname = findimg(state,box.image_id).file_name;
         //  3) compare
         //   '-> true: continue with 4)
         //   '-> false: `continue` loop, these boxes are unequal
@@ -192,7 +196,7 @@ function mergeboxes() {
         }
         else if(!equal) {
           // set image status to "review" and offending fields to "undefined"
-          var img = state.images[box.image_id];
+          var img = findimg(state,box.image_id);
           img.status = "review";
           if(v.category_id !== undefined && box.category_id != v.category_id) {
             box.category_id = undefined;
@@ -217,8 +221,8 @@ function mergeboxes() {
   var count = 0;
   for(var e in state.annotations) {
     var box = state.annotations[e];
-    box.id = count;
     count = count + 1;
+    box.id = count;
   }
 }
 
@@ -238,7 +242,7 @@ function mergeimages() {
     var innerimgs = new GeneralSet();
     for(var i in json.images) {
       var img = json.images[i];
-      innerimgs.add(img, projector, ignore);
+      innerimgs.add(JSON.parse(JSON.stringify(img)), projector, ignore);
     }
     innerimgs.forEach((v) => {
       imgs.add(v, projector, ignore);
@@ -249,8 +253,8 @@ function mergeimages() {
   var count = 0;
   for(var e in state.images) {
     var img = state.images[e];
-    img.id = count;
     count = count + 1;
+    img.id = count;
   }
 }
 
@@ -261,8 +265,9 @@ function mergecategories() {
     var innercats = new Set(json.categories);
     innercats.forEach(function(v) { cats.add(v.name.trim()); });
   }
+
   state.categories = [...cats];
-  var count = 0;
+  var count = 1;
   for(var e in state.categories) {
     var cat = {
       id: count,
@@ -276,21 +281,41 @@ function mergecategories() {
 function findcatid(cat) {
   if(cat == undefined)
     console.log(Error().stack);
-  var id = state.categories.findIndex((e) => e.name == cat.name.trim());
-  if(id == -1) {
+  var idx = state.categories.findIndex((e) => e.name == cat.name.trim());
+  if(idx == -1) {
     alert("BUG: findcatid should always work! Please report this.\nOffending category: \"" + cat.name + "\"");
-    id = 0;
+    idx = 0;
   }
-  return state.categories[id].id;
+  return state.categories[idx].id;
 }
 
 function findimgid(img) {
-  var id = state.images.findIndex((e) => e.file_name == img.file_name.trim());
-  if(id == -1) {
+  var idx = state.images.findIndex((e) => e.file_name == img.file_name.trim());
+  if(idx == -1) {
     alert("BUG: findimgid should always work! Please report this.\nOffending image: \"" + img.file_name + "\"");
-    id = 0;
+    idx = 0;
   }
-  return state.images[id].id;
+  return state.images[idx].id;
+}
+
+
+function findcat(st,id) {
+  var idx = st.categories.findIndex((e) => e.id == id);
+  if(idx == -1) {
+    alert("JSON may be broken, since annotation refers to category that does not exist.");
+    console.log(Error().stack);
+  }
+  return st.categories[idx];
+}
+
+function findimg(st,id) {
+  var idx = st.images.findIndex((e) => e.id == id);
+  if(idx == -1) {
+    alert("JSON may be broken, since annotation refers to image that does not exist.");
+    console.log(id);
+    console.log(Error().stack);
+  }
+  return st.images[idx];
 }
 
 function readfiles(files) {
@@ -313,7 +338,6 @@ function readfiles(files) {
         noerr = false;
         return ;
       }
-      console.log(this.count);
       state.jsons[this.count] = content;
 
       if(this.count + 1 >= files.length) {
