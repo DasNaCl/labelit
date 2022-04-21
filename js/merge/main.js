@@ -77,7 +77,6 @@ function parsecocos() {
   mergeboxes();
 
   // danone
-  state.jsons = undefined;
   $('#downloadbut').prop('disabled', false);
 }
 
@@ -351,6 +350,7 @@ function readfiles(files) {
 
 function download() {
   downloadObjectAsJson(state, date.toISOString().slice(0,10).replace(/-/g,"") + "_merged_coco");
+  state.jsons = undefined;
 }
 function downloadObjectAsJson(exportObj, exportName){
   if(window.showSaveFilePicker) {
