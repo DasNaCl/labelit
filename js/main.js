@@ -791,6 +791,8 @@ function reloadImgStatus() {
   else {
     $('#btnunseen').prop('checked', true).css('active', true);
   }
+
+  $('#currentimgtitle').text(state.images[state.current_pic].file.name);
 }
 
 function updateprevbutton(idx) {
