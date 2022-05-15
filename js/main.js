@@ -1335,8 +1335,8 @@ function mayEnableAnnotButton() {
     var imgid2img = [];
     var img2imgid = [];
     for(var i = 0; i < state.spec.images.length; ++i) {
-      imgid2img[state.spec.images[i].id] = state.spec.images[i].file_name;
-      img2imgid[state.spec.images[i].file_name] = state.spec.images[i].id;
+      imgid2img[state.spec.images[i].id] = state.spec.images[i];
+      img2imgid[state.spec.images[i].file_name] = i; //state.spec.images[i].id;
     }
     for(var j = 0; j < state.images.length; ++j) {
       var specimg = state.spec.images[img2imgid[state.images[j].file.name]];
@@ -1350,9 +1350,10 @@ function mayEnableAnnotButton() {
       var bboxes = [];
       for(var i = 0; i < state.spec.annotations.length; ++i) {
         var annot = state.spec.annotations[i];
-        if(imgid2img[annot.image_id].includes(img.name)) {
-          var imgw = state.spec.images[annot.image_id].width;
-          var imgh = state.spec.images[annot.image_id].height;
+        if(imgid2img[annot.image_id].file_name.includes(img.name)) {
+          var specimg = imgid2img[annot.image_id];
+          var imgw = specimg.width;
+          var imgh = specimg.height;
           bboxes.push({
             left: annot.bbox[0] / imgw,
             top: annot.bbox[1] / imgh,
