@@ -993,7 +993,7 @@ function buildExportData(TLcallback) {
     "name": "Public Domain"
   }];
   coco.categories = [];
-  var idx = 0;
+  var idx = 1;
   var label2id = [];
   for(var e in label2rainbowstep) {
     label2id[e] = idx;
@@ -1016,8 +1016,8 @@ function buildExportData(TLcallback) {
         for(var j = 0; j < state.boxes.length; ++j) {
           var bbox = state.boxes[j];
           coco.annotations.push({
-            id: bboxid,
-            image_id: i,
+            id: bboxid+1,
+            image_id: i+1,
             category_id: label2id[bbox.label],
             segmentation: [],
             iscrowd: 0,
@@ -1042,8 +1042,8 @@ function buildExportData(TLcallback) {
           for(var j = 0; j < state.images[i].bboxes.length; ++j) {
             var bbox = state.images[i].bboxes[j];
             coco.annotations.push({
-              id: bboxid,
-              image_id: i,
+              id: bboxid+1,
+              image_id: i+1,
               category_id: label2id[bbox.label],
               segmentation: [],
               iscrowd: 0,
@@ -1094,7 +1094,7 @@ function buildExportData(TLcallback) {
         state.images[jdx].width = w;
         state.images[jdx].height = h;
         coco.images.push({
-          id: jdx,
+          id: jdx+1,
           license: 1,
           file_name: state.images[jdx].file.name,
           height: h,
@@ -1108,7 +1108,7 @@ function buildExportData(TLcallback) {
     }
     else {
       coco.images.push({
-        id: jdx,
+        id: jdx+1,
         license: 1,
         file_name: state.images[jdx].file.name,
         height: state.images[jdx].height,
