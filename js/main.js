@@ -16,6 +16,8 @@ var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl, { delay: 300 })
 })
 var hasCsv = false;
+var hasPlotCsv = false;
+var plotCsv = undefined;
 
 function fire_tip(text) {
   if($('#tipsenabled').prop('checked')) {
@@ -918,10 +920,45 @@ function displayCSV() {
   }
 }
 
+function displayPlotCSV(idx) {
+  $('#plotcsvinfo').text("");
+  var file_name = state.images[idx].file.name;
+  // only consider files that start with this suffix
+  if(!file_name.startsWith('BGD_BIO_'))
+    return;
+  var plotstr = file_name.substr(8, 4);
+
+  var imgdate = new Date(parseInt(file_name.substr(13, 4), 10),
+                         parseInt(file_name.substr(17, 2), 10) - 1,
+                         parseInt(file_name.substr(19, 2)));
+  var plot = plotCsv[plotstr];
+  if(plot && plot.length >= 1) {
+    var foundOne = false;
+    for(var id = 0; id < plot.length; ++id) {
+      var spltt = plot[id].date_begin.split('.');
+      var plotdate = new Date(parseInt(spltt[2], 10),
+                              parseInt(spltt[1], 10)-1,
+                              parseInt(spltt[0], 10));
+      if(plotdate <= imgdate) {
+        var text = '' + plot[id].date_begin + ', ' + plot[id].time_begin;
+        $('#plotcsvinfo').text(text);
+        foundOne = true;
+      }
+    }
+    if(!foundOne) {
+      $('#error-toast-body').text("This image does not fit any given timeframe of the current plot \"" + plotstr + "\".");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+    }
+  }
+}
+
 // "gameloop"
 function choosePic(idx) {
   storebboxes();
   updateprevbutton(idx);
+  if(hasPlotCsv) {
+    displayPlotCSV(idx);
+  }
 
   state.current_pic = idx;
   update_canvas(function() {
@@ -1292,6 +1329,7 @@ function nojson() {
     $('#jsoncheckmark').hide();
     $('#annotatebutton').prop("disabled", true);
     $('#csvbutton').prop("disabled", true);
+    $('#plotcsvbutton').prop("disabled", true);
   }
 }
 function jsonformatupdate() {
@@ -1306,6 +1344,7 @@ function mayEnableAnnotButton() {
     if($('#nojsoncheck').prop('checked')) {
       $('#annotatebutton').prop("disabled", false);
       $('#csvbutton').prop("disabled", false);
+      $('#plotcsvbutton').prop("disabled", false);
       return;
     }
   }
@@ -1417,6 +1456,7 @@ function mayEnableAnnotButton() {
   }
   $('#annotatebutton').prop("disabled", false);
   $('#csvbutton').prop("disabled", false);
+  $('#plotcsvbutton').prop("disabled", false);
 }
 function loadjson(files) {
   $('#jsoncheckmark').hide();
@@ -1452,6 +1492,8 @@ function parseCsv(data, fieldSep, newLine) {
     var cSepRe = new RegExp(cSep, 'g');
     var fieldRe = new RegExp('(?<=(^|[' + fieldSep + '\\n]))"(|[\\s\\S]+?(?<![^"]"))"(?=($|[' + fieldSep + '\\n]))', 'g');
     var grid = [];
+    // take care of unicode/latin-1
+    data = escape(data).replace(/%3B/g, ';').replace(/%0D%0A/g, '\n');
     data.replace(/\r/g, '').replace(/\n+$/, '').replace(fieldRe, function(match, p1, p2) {
         return p2.replace(/\n/g, nSep).replace(/""/g, qSep).replace(/,/g, cSep);
     }).split(/\n/).forEach(function(line) {
@@ -1482,6 +1524,70 @@ function storeCSV(csvobj) {
       bounding_boxes: csvobj.bounding_boxes[row],
     };
   }
+}
+function loadcsvplot(files) {
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    var str = event.target.result;
+    var grid = parseCsv(str, ';');
+    if(!grid || !grid[0] || !grid[0].length) {
+      return;
+    }
+    hasPlotCsv = true;
+
+    var indices = { id_idx : -1, date_begin : -1, time_begin : -1, device_type : -1 };
+    //find indices of "Datum_Anfang" and "Uhrzeit_Anfang"
+    for(var idx = 0; idx < grid[0].length; ++idx) {
+      if(grid[0][idx] == 'Datum_Anfang') {
+        indices.date_begin = idx;
+      }
+      else if(grid[0][idx] == 'Uhrzeit_Anfang') {
+        indices.time_begin = idx;
+      }
+      else if(grid[0][idx] == 'Plot_ID') {
+        indices.id_idx = idx;
+      }
+      else if(grid[0][idx] == 'Ger%uFFFDtetyp') {
+        indices.device_type = idx;
+      }
+    }
+    if(indices.date_begin == -1) {
+      $('#error-toast-body').text("Plot-CSV does not contain column \"Datum_Anfang\".");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+      return;
+    }
+    else if(indices.time_begin == -1) {
+      $('#error-toast-body').text("Plot-CSV does not contain column \"Uhrzeit_Anfang\".");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+      return;
+    }
+    else if(indices.id_idx == -1) {
+      $('#error-toast-body').text("Plot-CSV does not contain column \"Plot_ID\".");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+      return;
+    }
+    else if(indices.device_type == -1) {
+      $('#error-toast-body').text("Plot-CSV does not contain column \"Gerätetyp\".");
+      bootstrap.Toast.getInstance(document.getElementById('error-toast')).show(100);
+      return;
+    }
+    // Now read all plots
+    var dict = [];
+    for(var row = 1; row < grid.length; ++row) {
+      if(grid[row][indices.device_type] == 'Cuddeback') {
+        var plotname = unescape(grid[row][indices.id_idx]).trim().toUpperCase();
+        if(dict[plotname] === undefined) {
+          dict[plotname] = [];
+        }
+        dict[plotname].push({
+          date_begin: unescape(grid[row][indices.date_begin]).trim(),
+          time_begin: unescape(grid[row][indices.time_begin]).trim(),
+        });
+      }
+    }
+    plotCsv = dict;
+  }
+  reader.readAsText(files[0]);
 }
 function loadcsv(files) {
   var reader = new FileReader();

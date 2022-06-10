@@ -156,7 +156,8 @@
 </select>
           </div>
           <h1>Finally, hit</h1>
-          <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input disabled id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />
+          <button id="annotatebutton" class="btn btn-success btn-lg" onclick="startAnnotation()" disabled>Annotate</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CSV:<input disabled id="csvbutton" class="btn btn-secondary" type="file" onchange="loadcsv(this.files)" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Plot-CSV:<input disabled id="plotcsvbutton" class="btn btn-secondary" type="file" onchange="loadcsvplot(this.files)" />
+
           &nbsp;&nbsp;&nbsp;&nbsp;
           <div class="form-check form-switch">
             <input type="checkbox" checked class="form-check-input" id="tipsenabled">
@@ -167,6 +168,7 @@
         <div id="annot" style="display:none;">
           <div style="text-align:center;">
           <h3 id="currentimgtitle"></h3>
+          <h5 id="plotcsvinfo"></h5>
             <button id="undo" class="btn btn-success" type="button" onclick="undo()" disabled><i class="fa-solid fa-rotate-left"></i></button>
             <!-- Sex -->
             <div class="btn-group colors" data-toggle="buttons">
