@@ -19,6 +19,8 @@ var hasCsv = false;
 var hasPlotCsv = false;
 var plotCsv = undefined;
 
+var roadblock = false;
+
 function fire_tip(text) {
   if($('#tipsenabled').prop('checked')) {
       $('#tip-toast-body').html(text);
@@ -338,6 +340,7 @@ function display_img(idx, callback) {
     canvas.add(oImg);
     (window.URL || window.webkitURL).revokeObjectURL(src)
 
+    console.log("reading boxes for image " + idx);
     var bboxes = state.images[idx].bboxes;
     for(var i = 0; bboxes && i < bboxes.length; ++i) {
       var bbox = bboxes[i];
@@ -351,6 +354,8 @@ function display_img(idx, callback) {
         attrs: bbox.attrs,
       }, true);
     }
+    console.log("resetting boxes for image " + idx);
+    console.log("state.boxes.length = " + state.boxes.length);
     state.images[idx].bboxes = [];
     state.images[idx].width = oImg.width;
     state.images[idx].height = oImg.height;
@@ -954,21 +959,30 @@ function displayPlotCSV(idx) {
 
 // "gameloop"
 function choosePic(idx) {
-  storebboxes();
-  updateprevbutton(idx);
-  if(hasPlotCsv) {
-    displayPlotCSV(idx);
-  }
+  if(!roadblock) {
+    roadblock = true;
+    console.log("calling storebboxes with idx=" + idx);
+    storebboxes();
+    updateprevbutton(idx);
+    if(hasPlotCsv) {
+      displayPlotCSV(idx);
+    }
 
-  state.current_pic = idx;
-  update_canvas(function() {
-    updateViewport();
-    applyFilter();
-    update_canvas();
-    updatePagination();
-    displayCSV();
-    reloadImgStatus();
-  });
+    state.current_pic = idx;
+    update_canvas(function() {
+    if(state.boxes.length == 3) {
+      console.log("HERE! idx: " + idx + "   roadblock: " + roadblock);
+    }
+      updateViewport();
+      applyFilter();
+      //update_canvas(); // <- FIXME: Introducing this leads to an error where boxes move around
+      updatePagination();
+      displayCSV();
+      reloadImgStatus();
+
+      roadblock = false;
+    });
+  }
 }
 
 function downloadObjectAsJson(exportObj, exportName){
