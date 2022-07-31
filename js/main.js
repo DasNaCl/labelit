@@ -212,6 +212,8 @@ var state = {
   xcross: null,
   max_zoom: 0.1,
   undo_buffer: [],
+  preloaded_images: [],
+  preloaded_images_count: 5,
 };
 
 function clear_undos() {
@@ -330,15 +332,97 @@ function updateBBOXInfo(what) {
   }
 }
 
-function display_img(idx, callback) {
-  var path = state.images[idx].file;
-  var src = (window.URL || window.webkitURL).createObjectURL(path);
+function preload_images_old(from0, to0) {
+  if(from0 >= to0) {
+    return;
+  }
+  var from = from0 >= state.images.length ? from0 - state.images.length :
+             from0 < 0 ? from0 + state.images.length : from0;
+  var to = to0 >= state.images.length ? to0 - state.images.length :
+           to0 < 0 ? to0 + state.images.length : to0;
+  if(state.preloaded_images[from]) {
+    preload_images(from0+1, to0);
+  }
+  else {
+    console.log(from);
+    var path = state.images[from].file;
+    var src = (window.URL || window.webkitURL).createObjectURL(path);
+    fabric.Image.fromURL(src, (oImg) => {
+      oImg.hoverCursor = 'default';
+      oImg.selectable = oImg.hasControls = canvas.hasBorders = false;
+      state.images[from].width = oImg.width;
+      state.images[from].height = oImg.height;
+      (window.URL || window.webkitURL).revokeObjectURL(src);
+      state.preloaded_images[from] = oImg;
+      preload_images(from0+1, to0);
+    });
+  }
+}
+function process_toadd_preload_images(i, toadd) {
+  if(i >= toadd.length) {
+    return;
+  }
+  var id = toadd[i];
 
+  var path = state.images[id].file;
+  var src = (window.URL || window.webkitURL).createObjectURL(path);
   fabric.Image.fromURL(src, (oImg) => {
     oImg.hoverCursor = 'default';
     oImg.selectable = oImg.hasControls = canvas.hasBorders = false;
+    state.images[id].width = oImg.width;
+    state.images[id].height = oImg.height;
+    (window.URL || window.webkitURL).revokeObjectURL(src);
+
+    state.preloaded_images[id] = oImg;
+
+    process_toadd_preload_images(i+1, toadd);
+  });
+}
+function preload_images(idx) {
+  var toadd = [];
+  for(var i = Math.max(0, idx - state.preloaded_images_count);
+    i <= Math.min(state.images.length - 1, idx + state.preloaded_images_count);
+    ++i) {
+    if(state.preloaded_images[i]) {
+      ;
+    }
+    else {
+      toadd.push(i);
+    }
+  }
+  process_toadd_preload_images(0, toadd);
+}
+
+function cleanup_preloaded_images(idx) {
+  if(state.preloaded_images.length >= state.preloaded_images_count) {
+    var todel = [];
+    state.preloaded_images.forEach((_,id) => {
+      if(id < idx - state.preloaded_images_count) {
+        todel.push(id);
+      }
+      else if(id > idx + state.preloaded_images_count) {
+        todel.push(id);
+      }
+    });
+    for(var i in todel) {
+      delete state.preloaded_images[todel[i]];
+    }
+  }
+}
+
+function display_img(idx, callback) {
+  cleanup_preloaded_images(idx);
+  preload_images(idx);
+  var path = state.images[idx].file;
+  var src = (window.URL || window.webkitURL).createObjectURL(path);
+  var logic = (oImg) => {
+    oImg.hoverCursor = 'default';
+    oImg.selectable = oImg.hasControls = canvas.hasBorders = false;
+    state.images[idx].width = oImg.width;
+    state.images[idx].height = oImg.height;
+    (window.URL || window.webkitURL).revokeObjectURL(src);
     canvas.add(oImg);
-    (window.URL || window.webkitURL).revokeObjectURL(src)
+    state.preloaded_images[idx] = oImg;
 
     var bboxes = state.images[idx].bboxes;
     for(var i = 0; bboxes && i < bboxes.length; ++i) {
@@ -354,12 +438,16 @@ function display_img(idx, callback) {
       }, true);
     }
     state.images[idx].bboxes = [];
-    state.images[idx].width = oImg.width;
-    state.images[idx].height = oImg.height;
     state.max_zoom = Math.min(canvas.width / oImg.width, canvas.height / oImg.height) - 0.1;
 
     callback();
-  });
+  };
+  if(state.preloaded_images[idx]) {
+    logic(state.preloaded_images[idx]);
+  }
+  else {
+    fabric.Image.fromURL(src, logic);
+  }
 }
 
 function display_boxes() {
@@ -1152,7 +1240,7 @@ function buildExportData(TLcallback) {
     }
     else {
       coco.images.push({
-        id: jdx+1,
+        id: jdx,
         license: 1,
         file_name: state.images[jdx].file.name,
         height: state.images[jdx].height,
@@ -1464,6 +1552,8 @@ function mayEnableAnnotButton() {
   $('#annotatebutton').prop("disabled", false);
   $('#csvbutton').prop("disabled", false);
   $('#plotcsvbutton').prop("disabled", false);
+
+  preload_images(0, state.preload_images_count);
 }
 function loadjson(files) {
   $('#jsoncheckmark').hide();
