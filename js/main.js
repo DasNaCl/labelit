@@ -421,6 +421,12 @@ function display_img(idx, callback) {
     state.images[idx].width = oImg.width;
     state.images[idx].height = oImg.height;
     (window.URL || window.webkitURL).revokeObjectURL(src);
+
+    // add filters
+    //var filters = ["brightness", "contrast", "invert", "sharpen", "emboss"];
+
+    oImg.filters = [];
+    resetfilters();
     canvas.add(oImg);
     state.preloaded_images[idx] = oImg;
 
@@ -480,6 +486,7 @@ function update_canvas_btn() {
   else {
     this.statistics = 1;
   }
+  resetfilters();
   return update_canvas();
 }
 
@@ -1802,6 +1809,56 @@ function readfiles(files) {
   }
 }
 
+// filter initialize
+fabric.filterBackend = new fabric.Canvas2dFilterBackend();
+function applyFilter(index, filter) {
+  var obj = state.preloaded_images[state.current_pic];
+  obj.filters[index] = filter;
+  obj.applyFilters();
+  canvas.renderAll();
+}
+
+function resetfilters() {
+  $('#brightnessrange').val(0);
+  $('#contrastrange').val(0);
+  $('#colorinvertbutton').prop("checked", false);
+  $('#sharpenbutton').prop("checked", false);
+  $('#embossbutton').prop("checked", false);
+
+  for(var i in state.preloaded_images) {
+    state.preloaded_images[i].filters = [];
+    state.preloaded_images[i].applyFilters();
+  }
+  canvas.renderAll();
+}
+
+$('#brightnessrange').on('input', function() {
+  applyFilter(0, new fabric.Image.filters.Brightness({
+    brightness: parseFloat(this.value)
+  }));
+})
+$('#contrastrange').on('input', function() {
+  applyFilter(1, new fabric.Image.filters.Contrast({
+    contrast: parseFloat(this.value)
+  }));
+})
+$('#colorinvertbutton').on('change', function() {
+  applyFilter(2, this.checked && new fabric.Image.filters.Invert());
+})
+$('#sharpenbutton').on('change', function() {
+  applyFilter(3, this.checked && new fabric.Image.filters.Convolute({
+    matrix: [  0, -1,  0,
+              -1,  5, -1,
+               0, -1,  0 ]
+  }));
+})
+$('#embossbutton').on('change', function() {
+  applyFilter(4, this.checked && new fabric.Image.filters.Convolute({
+    matrix: [  1,   1,  1,
+               1, 0.7, -1,
+              -1,  -1, -1 ]
+  }));
+})
 // handle logic of little test box for classes
 $('#classinput').on('input', function() {
   var text = $('#classinput').val();

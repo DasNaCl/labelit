@@ -198,6 +198,27 @@
 <select id="classdropdown" class="combobox w-50 input-large form-control">
 </select>
               </div>
+              <label>
+                <i class="fa-solid fa-sun"></i>
+                <input id="brightnessrange" type="range" min="-1" max="1" value="0", step="0.003921">
+              </label>
+              <label>
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <input id="contrastrange" type="range" min="-1" max="1" value="0" step="0.003921">
+              </label>
+              <label>
+                <i class="fa-solid fa-lightbulb"></i>
+                <input id="colorinvertbutton" type="checkbox">
+              </label>
+              <label>
+                <i class="fa-solid fa-binoculars"></i>
+                <input id="sharpenbutton" type="checkbox">
+              </label>
+              <label>
+                <i class="fa-brands fa-sith"></i>
+                <input id="embossbutton" type="checkbox">
+              </label>
+
               <br>
           <!-- Help button for modal-->
           <button type="button" class="btn btn-primary" onclick="$('#helpModal').modal('show')" data-bs-toggle="tooltip" data-bs-placement="top" title="Hopefully helpful information"> 
