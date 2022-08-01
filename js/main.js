@@ -1477,6 +1477,10 @@ function mayEnableAnnotButton() {
       if(specimg && specimg.status) {
         state.images[j].status = specimg.status;
       }
+      if(specimg && specimg.height && specimg.width) {
+        state.images[j].width = specimg.width;
+        state.images[j].height = specimg.height;
+      }
     }
     for(var j = 0; j < state.images.length; ++j) {
       var img = state.images[j].file;
@@ -1488,6 +1492,8 @@ function mayEnableAnnotButton() {
           var specimg = imgid2img[annot.image_id];
           var imgw = specimg.width;
           var imgh = specimg.height;
+          state.images[j].width = imgw;
+          state.images[j].height = imgh;
           bboxes.push({
             left: annot.bbox[0] / imgw,
             top: annot.bbox[1] / imgh,
