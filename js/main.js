@@ -213,7 +213,7 @@ var state = {
   max_zoom: 0.1,
   undo_buffer: [],
   preloaded_images: [],
-  preloaded_images_count: 5,
+  preloaded_images_count: 2,
 };
 
 function clear_undos() {
@@ -332,32 +332,6 @@ function updateBBOXInfo(what) {
   }
 }
 
-function preload_images_old(from0, to0) {
-  if(from0 >= to0) {
-    return;
-  }
-  var from = from0 >= state.images.length ? from0 - state.images.length :
-             from0 < 0 ? from0 + state.images.length : from0;
-  var to = to0 >= state.images.length ? to0 - state.images.length :
-           to0 < 0 ? to0 + state.images.length : to0;
-  if(state.preloaded_images[from]) {
-    preload_images(from0+1, to0);
-  }
-  else {
-    console.log(from);
-    var path = state.images[from].file;
-    var src = (window.URL || window.webkitURL).createObjectURL(path);
-    fabric.Image.fromURL(src, (oImg) => {
-      oImg.hoverCursor = 'default';
-      oImg.selectable = oImg.hasControls = canvas.hasBorders = false;
-      state.images[from].width = oImg.width;
-      state.images[from].height = oImg.height;
-      (window.URL || window.webkitURL).revokeObjectURL(src);
-      state.preloaded_images[from] = oImg;
-      preload_images(from0+1, to0);
-    });
-  }
-}
 function process_toadd_preload_images(i, toadd) {
   if(i >= toadd.length) {
     return;
@@ -378,7 +352,7 @@ function process_toadd_preload_images(i, toadd) {
     process_toadd_preload_images(i+1, toadd);
   });
 }
-function preload_images(idx) {
+function preload_images_old(idx) {
   var toadd = [];
   for(var i = Math.max(0, idx - state.preloaded_images_count);
     i <= Math.min(state.images.length - 1, idx + state.preloaded_images_count);
@@ -392,8 +366,48 @@ function preload_images(idx) {
   }
   process_toadd_preload_images(0, toadd);
 }
-
+function preload_images_step(idx) {
+  var toadd = [];
+  var old_curpic = state.current_pic;
+  for(var i = 0; i < state.preloaded_images_count; ++i) {
+    var next = next_pic_number();
+    state.current_pic = next;
+    toadd.push(next);
+  }
+  state.current_pic = old_curpic;
+  for(var i = -1; i < state.preloaded_images_count-1; ++i) {
+    var prev = prev_pic_number();
+    state.current_pic = prev;
+    toadd.push(prev);
+  }
+  state.current_pic = old_curpic;
+  toadd.push(state.current_pic);
+  toadd = [...new Set(toadd)];
+  console.log("adding " + toadd);
+  return toadd;
+}
+function preload_images(idx) {
+  var toadd = preload_images_step(idx);
+  process_toadd_preload_images(0, toadd);
+}
 function cleanup_preloaded_images(idx) {
+  var tokeep = new Set(preload_images_step(idx));
+  
+  var existing = new Set();
+  state.preloaded_images.forEach((_,id) => {
+    existing.add(id);
+  });
+  let todel = new Set();
+  existing.forEach(elem => todel.add(elem));
+  tokeep.forEach(elem => todel.delete(elem));
+
+  console.log("deleting " + [...todel]);
+  for(var i in todel) {
+    delete state.preloaded_images[todel[i]];
+  }
+}
+
+function cleanup_preloaded_images_old(idx) {
   if(state.preloaded_images.length >= state.preloaded_images_count) {
     var todel = [];
     state.preloaded_images.forEach((_,id) => {
