@@ -815,7 +815,10 @@ canvas.on('mouse:up', function(e) {
           push_undo(() => { deletebox(null, {target: box}); });
         }
         state.xcross = null;
-        update_canvas(() => canvas.setActiveObject(state.boxes[state.boxes.length-1]));
+        update_canvas(() => {
+          canvas.setActiveObject(state.boxes[state.boxes.length-1])
+          setBBOXControl(true);
+        });
       }
     }
     this.selection = this.bkpselection;
