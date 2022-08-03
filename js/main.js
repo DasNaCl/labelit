@@ -213,7 +213,7 @@ var state = {
   max_zoom: 0.1,
   undo_buffer: [],
   preloaded_images: [],
-  preloaded_images_count: 2,
+  preloaded_images_count: 10,
 };
 
 function clear_undos() {
@@ -338,6 +338,10 @@ function process_toadd_preload_images(i, toadd) {
   }
   var id = toadd[i];
 
+  if(state.preloaded_images[id]) {
+    process_toadd_preload_images(i+1, toadd);
+    return;
+  }
   var path = state.images[id].file;
   var src = (window.URL || window.webkitURL).createObjectURL(path);
   fabric.Image.fromURL(src, (oImg) => {
@@ -383,14 +387,9 @@ function preload_images_step(idx) {
   state.current_pic = old_curpic;
   toadd.push(state.current_pic);
   toadd = [...new Set(toadd)];
-  console.log("adding " + toadd);
   return toadd;
 }
 function preload_images(idx) {
-  var toadd = preload_images_step(idx);
-  process_toadd_preload_images(0, toadd);
-}
-function cleanup_preloaded_images(idx) {
   var tokeep = new Set(preload_images_step(idx));
   
   var existing = new Set();
@@ -401,10 +400,11 @@ function cleanup_preloaded_images(idx) {
   existing.forEach(elem => todel.add(elem));
   tokeep.forEach(elem => todel.delete(elem));
 
-  console.log("deleting " + [...todel]);
+  todel = [...todel];
   for(var i in todel) {
     delete state.preloaded_images[todel[i]];
   }
+  process_toadd_preload_images(0, [...tokeep]);
 }
 
 function cleanup_preloaded_images_old(idx) {
@@ -425,7 +425,6 @@ function cleanup_preloaded_images_old(idx) {
 }
 
 function display_img(idx, callback) {
-  cleanup_preloaded_images(idx);
   preload_images(idx);
   var path = state.images[idx].file;
   var src = (window.URL || window.webkitURL).createObjectURL(path);
