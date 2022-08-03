@@ -1260,7 +1260,7 @@ function buildExportData(TLcallback) {
     }
     else {
       coco.images.push({
-        id: jdx,
+        id: jdx+1,
         license: 1,
         file_name: state.images[jdx].file.name,
         height: state.images[jdx].height,
