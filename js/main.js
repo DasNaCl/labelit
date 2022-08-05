@@ -1366,9 +1366,10 @@ function updatePagination() {
     var color = (counts[i].what == 'seen' ? 'bg-success'
               : (counts[i].what == 'review' ? 'bg-danger' : 'bg-primary'));
 
-    $('#progressdiv').append("<a href=\"#\"><div class=\"progress-bar " + color + "\" role=\"progressbar\" "
+    // TODO: click on progress bar
+    $('#progressdiv').append("<div class=\"progress-bar " + color + "\" role=\"progressbar\" "
       + "style=\"width: " + progress + "%\" aria-valuenow=\"" + progress
-      + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></a>");
+      + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
   }
   reloadImgStatus();
   $('#pagenumbertext').val(state.current_pic + 1);
