@@ -1366,9 +1366,9 @@ function updatePagination() {
     var color = (counts[i].what == 'seen' ? 'bg-success'
               : (counts[i].what == 'review' ? 'bg-danger' : 'bg-primary'));
 
-    $('#progressdiv').append("<div class=\"progress-bar " + color + "\" role=\"progressbar\" "
+    $('#progressdiv').append("<a href=\"#\"><div class=\"progress-bar " + color + "\" role=\"progressbar\" "
       + "style=\"width: " + progress + "%\" aria-valuenow=\"" + progress
-      + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>");
+      + "\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div></a>");
   }
   reloadImgStatus();
   $('#pagenumbertext').val(state.current_pic + 1);
@@ -1819,6 +1819,12 @@ function readfiles(files) {
     $('#filecheckmark').show(500, mayEnableAnnotButton);
     $('#success-toast-body').text("Your selected files are available.");
     bootstrap.Toast.getInstance(document.getElementById('success-toast')).show(100);
+
+    state.images.sort(function(a, b) {
+        if(a.file.name < b.file.name) { return -1; }
+        if(a.file.name > b.file.name) { return 1; }
+        return 0;
+    });
   }
   else {
     $('#filecheckmark').hide();
