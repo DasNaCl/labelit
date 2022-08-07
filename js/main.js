@@ -1327,9 +1327,10 @@ function updatePagination() {
   var pics = []; var pic_count = 0; var curpic = 0;
   for(var i = 0; i < state.images.length; ++i) {
     var status = state.images[i].status;
-    var filter = ((status == "review" && $("#filterreview").prop('checked'))
-               || (status == "seen" && $("#filterseen").prop('checked')));
-    if(!filter || state.current_pic == i) {
+    var nofilter = ((status == "review" && $("#filterreview").prop('checked'))
+                 || (status == "seen" && $("#filterseen").prop('checked'))
+                 || (status == "unseen" && $("#filterunseen").prop('checked')));
+    if(nofilter || state.current_pic == i) {
       pics[pic_count++] = i;
       if(state.current_pic == i) {
         curpic = pic_count - 1;
@@ -1955,8 +1956,9 @@ function next_pic_number() {
   var full_round = false;
   var initial = next_pic;
   var st = state.images[next_pic].status;
-  while((st == 'seen' && $('#filterseen').prop('checked'))
-     || (st == 'review' && $('#filterreview').prop('checked'))) {
+  while((st == 'seen' && !$('#filterseen').prop('checked'))
+     || (st == 'review' && !$('#filterreview').prop('checked'))
+     || (st == 'unseen' && !$('#filterunseen').prop('checked'))) {
     next_pic += 1;
     if(next_pic >= state.images.length) {
       next_pic = 0;
@@ -1975,8 +1977,9 @@ function prev_pic_number() {
   var full_round = false;
   var initial = next_pic;
   var st = state.images[next_pic].status;
-  while((st == 'seen' && $('#filterseen').prop('checked'))
-     || (st == 'review' && $('#filterreview').prop('checked'))) {
+  while((st == 'seen' && !$('#filterseen').prop('checked'))
+     || (st == 'review' && !$('#filterreview').prop('checked'))
+     || (st == 'unseen' && !$('#filterunseen').prop('checked'))) {
     next_pic -= 1;
     if(next_pic < 0) { 
       next_pic = state.images.length - 1;
