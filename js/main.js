@@ -188,15 +188,17 @@ var LabeledRect = fabric.util.createClass(fabric.Rect, {
   },
 
   _render: function(ctx) {
-    this.callSuper('_render', ctx);
+    if(state.drawboxes) {
+      this.callSuper('_render', ctx);
 
-    if(!this.hidelabel) {
-      ctx.fillStyle = this.stroke;
-      ctx.font = `${this.fontSize}px Verdana`;
-      ctx.fillRect(-this.width/2, -this.height/2 - this.fontSize,
-                   getTextWidth(this.label + ` (${this.conf})`, ctx.font), this.fontSize);
-      ctx.fillStyle = isDark(this.stroke) ? 'white' : 'black';
-      ctx.fillText(this.label + ` (${this.conf})`, -this.width/2, -this.height/2);
+      if(!this.hidelabel) {
+        ctx.fillStyle = this.stroke;
+        ctx.font = `${this.fontSize}px Verdana`;
+        ctx.fillRect(-this.width/2, -this.height/2 - this.fontSize,
+                     getTextWidth(this.label + ` (${this.conf})`, ctx.font), this.fontSize);
+        ctx.fillStyle = isDark(this.stroke) ? 'white' : 'black';
+        ctx.fillText(this.label + ` (${this.conf})`, -this.width/2, -this.height/2);
+      }
     }
   }
 });
@@ -214,6 +216,7 @@ var state = {
   undo_buffer: [],
   preloaded_images: [],
   preloaded_images_count: 10,
+  drawboxes: true,
 };
 
 function clear_undos() {
@@ -686,6 +689,21 @@ function useprev() {
     }
     $('#prevbutton').prop('disabled', false);
   });
+}
+
+function toggledrawingboxes() {
+  state.drawboxes = !state.drawboxes;
+
+  $('#toggledrawingboxes').toggleClass("btn-success", !state.drawboxes);
+  update_canvas();
+
+  if(state.drawboxes) {
+    $('#tip-toast-body').text("Boxes are SHOWN.");
+  }
+  else {
+    $('#tip-toast-body').text("Boxes are HIDDEN.");
+  }
+  bootstrap.Toast.getInstance(document.getElementById('tip-toast')).show(1);
 }
 
 function drawbox() {
