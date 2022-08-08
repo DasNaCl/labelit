@@ -359,20 +359,6 @@ function process_toadd_preload_images(i, toadd) {
     process_toadd_preload_images(i+1, toadd);
   });
 }
-function preload_images_old(idx) {
-  var toadd = [];
-  for(var i = Math.max(0, idx - state.preloaded_images_count);
-    i <= Math.min(state.images.length - 1, idx + state.preloaded_images_count);
-    ++i) {
-    if(state.preloaded_images[i]) {
-      ;
-    }
-    else {
-      toadd.push(i);
-    }
-  }
-  process_toadd_preload_images(0, toadd);
-}
 function preload_images_step(idx) {
   var toadd = [];
   var old_curpic = state.current_pic;
@@ -386,6 +372,13 @@ function preload_images_step(idx) {
     var prev = prev_pic_number();
     state.current_pic = prev;
     toadd.push(prev);
+  }
+  // keep small window that is definately included, don't care about filters
+  for(var i = -2; i < 5; ++i) {
+    var next = old_curpic + i;
+    next = (next < 0 ? next + state.images.length :
+            next >= state.images.length ? next - state.images.length : next);
+    toadd.push(next);
   }
   state.current_pic = old_curpic;
   toadd.push(state.current_pic);
