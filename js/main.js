@@ -435,7 +435,6 @@ function display_img(idx, callback) {
     //var filters = ["brightness", "contrast", "invert", "sharpen", "emboss"];
 
     oImg.filters = [];
-    resetfilters();
     canvas.add(oImg);
     state.preloaded_images[idx] = oImg;
 
@@ -1094,6 +1093,7 @@ function choosePic(idx) {
       updatePagination();
       displayCSV();
       reloadImgStatus();
+      resetfilters();
 
       update_canvas(function() { roadblock = false; });
     });
