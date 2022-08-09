@@ -481,12 +481,13 @@ function display_boxes() {
 function update_canvas(callback = function() {}) {
   canvas.clear().renderAll();
   display_img(state.current_pic, () => {
-    if(state.nightvision != null) {
-      canvas.add(state.nightvision);
-    }
     display_boxes();
     if(state.xcross) {
       canvas.add(state.xcross);
+    }
+    if(state.nightvision != null) {
+      canvas.add(state.nightvision);
+      state.nightvision.moveTo(1);
     }
     callback();
   });
@@ -1914,11 +1915,16 @@ $('#nightbutton').on('click', function() {
 function resetfilters() {
   $('#brightnessrange').val(0);
   $('#contrastrange').val(0);
+  $('#brightnessrange').prop("disabled", false);
+  $('#contrastrange').prop("disabled", false);
   $('#colorinvertbutton').prop("checked", false);
   $('#sharpenbutton').prop("checked", false);
   $('#embossbutton').prop("checked", false);
   $('#nightbutton').prop("checked", false);
-
+  if(state.nightvision != null) {
+    canvas.remove(state.nightvision);
+    state.nightvision = null;
+  }
   for(var i in state.preloaded_images) {
     state.preloaded_images[i].filters = [];
     state.preloaded_images[i].applyFilters();
