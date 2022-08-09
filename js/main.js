@@ -1892,6 +1892,7 @@ $('#nightbutton').on('click', function() {
       var oImg = new fabric.Image(result.image.source);
       oImg.hoverCursor = 'default';
       oImg.selectable = oImg.hasControls = canvas.hasBorders = false;
+      oImg.moveTo(1);
       state.nightvision = oImg;
       canvas.add(oImg);
     })();
