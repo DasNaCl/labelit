@@ -217,6 +217,7 @@ var state = {
   preloaded_images: [],
   preloaded_images_count: 10,
   drawboxes: true,
+  nightvision: null,
 };
 
 function clear_undos() {
@@ -347,7 +348,6 @@ function process_toadd_preload_images(i, toadd) {
     process_toadd_preload_images(i+1, toadd);
     return;
   }
-  console.log(id);
   var path = state.images[id].file;
   var src = (window.URL || window.webkitURL).createObjectURL(path);
   fabric.Image.fromURL(src, (oImg) => {
@@ -1856,6 +1856,57 @@ function applyFilter(index, filter) {
   canvas.renderAll();
 }
 
+
+function makenightvisionpipeline(media) {
+  // create the pipeline
+  const pipeline = Speedy.Pipeline();
+  const source = Speedy.Image.Source();
+  const sink = Speedy.Image.Sink();
+  const nightvision = Speedy.Filter.Nightvision();
+  nightvision.gain = 0.5;
+  nightvision.offset = 0.5;
+  nightvision.decay = 0.0;
+  nightvision.quality = "high";
+
+  source.media = media;
+
+  source.output().connectTo(nightvision.input());
+  nightvision.output().connectTo(sink.input());
+
+  pipeline.init(source, sink, nightvision);
+  return pipeline;
+}
+
+$('#nightbutton').on('click', function() {
+  if(state.nightvision == null) {
+    $('#brightnessrange').prop("disabled", true);
+    $('#contrastrange').prop("disabled", true);
+    $('#colorinvertbutton').prop("disabled", true);
+    $('#sharpenbutton').prop("disabled", true);
+    $('#embossbutton').prop("disabled", true);
+    (async () => {
+      const media = await Speedy.load(state.preloaded_images[state.current_pic].getElement());
+      const pipeline = makenightvisionpipeline(media);
+      const result = await pipeline.run();
+
+      var oImg = new fabric.Image(result.image.source);
+      oImg.hoverCursor = 'default';
+      oImg.selectable = oImg.hasControls = canvas.hasBorders = false;
+      state.nightvision = oImg;
+      canvas.add(oImg);
+    })();
+  }
+  else {
+    $('#brightnessrange').prop("disabled", false);
+    $('#contrastrange').prop("disabled", false);
+    $('#colorinvertbutton').prop("disabled", false);
+    $('#sharpenbutton').prop("disabled", false);
+    $('#embossbutton').prop("disabled", false);
+    canvas.remove(state.nightvision);
+    state.nightvision = null;
+  }
+})
+
 function resetfilters() {
   $('#brightnessrange').val(0);
   $('#contrastrange').val(0);
@@ -1869,7 +1920,6 @@ function resetfilters() {
   }
   canvas.renderAll();
 }
-
 $('#brightnessrange').on('input', function() {
   applyFilter(0, new fabric.Image.filters.Brightness({
     brightness: parseFloat(this.value)
