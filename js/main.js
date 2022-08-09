@@ -341,7 +341,7 @@ function process_toadd_preload_images(i, toadd) {
     return;
   }
   var id = toadd[i];
-  if(id < 0 || id > state.images.length) {
+  if(id < 0 || id >= state.images.length) {
     return;
   }
   if(state.preloaded_images[id]) {
