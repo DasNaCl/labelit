@@ -340,11 +340,14 @@ function process_toadd_preload_images(i, toadd) {
     return;
   }
   var id = toadd[i];
-
+  if(id < 0 || id > state.images.length) {
+    return;
+  }
   if(state.preloaded_images[id]) {
     process_toadd_preload_images(i+1, toadd);
     return;
   }
+  console.log(id);
   var path = state.images[id].file;
   var src = (window.URL || window.webkitURL).createObjectURL(path);
   fabric.Image.fromURL(src, (oImg) => {
